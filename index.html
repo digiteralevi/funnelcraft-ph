@@ -164,9 +164,9 @@ select option{background:#1F1440;}
 </div>
 
 <div class="api-key-bar">
-  <label>OpenRouter API Key:</label>
-  <input type="text" id="api-key" placeholder="sk-or-v1-... (libre — kumuha sa openrouter.ai/keys)">
-  <a href="https://openrouter.ai/keys" target="_blank">Kumuha ng free key →</a>
+  <label>Gemini API Key:</label>
+  <input type="text" id="api-key" placeholder="AIza... (libre — kumuha sa aistudio.google.com/apikey)">
+  <a href="https://aistudio.google.com/apikey" target="_blank">Kumuha ng free key →</a>
 </div>
 
 <div class="app">
@@ -464,7 +464,7 @@ select option{background:#1F1440;}
       <div class="empty-state" id="emp">
         <div class="empty-icon">📄</div>
         <div class="empty-title">Walang preview pa</div>
-        <div class="empty-sub">Ilagay ang OpenRouter API key sa taas, sagutan ang Offer tab, i-upload ang assets, piliin ang brand colors at payment — tapos i-click ang "I-generate".</div>
+        <div class="empty-sub">Ilagay ang Gemini API key sa taas, sagutan ang Offer tab, i-upload ang assets, piliin ang brand colors at payment — tapos i-click ang "I-generate".</div>
       </div>
       <div class="loading-wrap" id="loading">
         <div class="spinner"></div>
@@ -532,7 +532,7 @@ function nav(d) {
 
 function getApiKey() {
   const k = document.getElementById('api-key').value.trim();
-  if(!k){ alert('Ilagay muna ang OpenRouter API key sa taas. Libre kumuha sa openrouter.ai/keys'); return null; }
+  if(!k){ alert('Ilagay muna ang Gemini API key sa taas. Libre kumuha sa aistudio.google.com/apikey'); return null; }
   return k;
 }
 
@@ -541,28 +541,21 @@ async function callAI(systemPrompt, userPrompt) {
   if(!key) throw new Error('no key');
 
   const models = [
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'google/gemini-2.0-flash-exp:free',
-    'deepseek/deepseek-chat-v3-0324:free'
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-flash-latest'
   ];
 
   let lastError = '';
   for (const model of models) {
     try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + key,
-          'HTTP-Referer': 'https://funnelcraft.ph',
-          'X-Title': 'FunnelCraft PH'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ]
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { maxOutputTokens: 8192 }
         })
       });
 
@@ -570,20 +563,20 @@ async function callAI(systemPrompt, userPrompt) {
 
       if (data.error) {
         lastError = `[${model}] ${data.error.message || JSON.stringify(data.error)}`;
-        continue; // try next model
+        continue;
       }
-      const content = data.choices?.[0]?.message?.content;
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!content) {
         lastError = `[${model}] Walang content sa response: ${JSON.stringify(data).slice(0,200)}`;
         continue;
       }
-      return content; // success
+      return content;
     } catch (e) {
       lastError = `[${model}] ${e.message}`;
       continue;
     }
   }
-  throw new Error(lastError || 'Lahat ng free models ay busy ngayon. Subukan ulit mamaya.');
+  throw new Error(lastError || 'Lahat ng Gemini models ay busy ngayon. Subukan ulit mamaya.');
 }
 
 async function suggest(field) {
