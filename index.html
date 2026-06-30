@@ -555,7 +555,7 @@ async function callAI(systemPrompt, userPrompt) {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { maxOutputTokens: 8192 }
+          generationConfig: { maxOutputTokens: 32768, temperature: 0.9 }
         })
       });
 
@@ -566,8 +566,13 @@ async function callAI(systemPrompt, userPrompt) {
         continue;
       }
       const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const finishReason = data.candidates?.[0]?.finishReason;
       if (!content) {
         lastError = `[${model}] Walang content sa response: ${JSON.stringify(data).slice(0,200)}`;
+        continue;
+      }
+      if (finishReason === 'MAX_TOKENS') {
+        lastError = `[${model}] Naputol ang sagot dahil masyadong mahaba (MAX_TOKENS)`;
         continue;
       }
       return content;
@@ -800,27 +805,28 @@ REQUIRED JAVASCRIPT:
 2. Floating sticky CTA bar after scrolling 400px
 3. Social proof toast every 15 seconds with random Filipino name + city (Quezon City, Cebu, Davao, Marikina, Iloilo, Batangas, Pampanga)
 
-PAGE SECTIONS (write ALL with real persuasive copy, no placeholders):
+PAGE SECTIONS (write ALL, keep copy tight and punchy — concise sentences, not essays):
 1. Announcement bar - urgency + price
 2. Sticky nav with logo + CTA
 3. Hero - punchy headline, subheadline, CTA, hero image
 4. Video section if provided
-5. "Para sa iyo ito kung..." - 6 buyer bullets
-6. Pain points - "Familiar ba ito sa iyo?" - 7-8 bullets
-7. Solution bridge
-8. What's included - full breakdown with gallery
-9. Transformation - before/after
-10. 3 testimonials with Filipino names
+5. "Para sa iyo ito kung..." - 5 buyer bullets
+6. Pain points - "Familiar ba ito sa iyo?" - 5-6 bullets
+7. Solution bridge - 2-3 short paragraphs
+8. What's included - breakdown with gallery
+9. Transformation - before/after, brief
+10. 3 short testimonials with Filipino names
 11. How it works - 3 steps
 12. Price stack - crossed out original, highlighted final
 13. Order bump if provided
-14. Guarantee section
-15. FAQ accordion - 6 questions
-16. Two Paths closing
-17. Final CTA
-18. Footer
+14. Guarantee section - brief
+15. FAQ accordion - 5 questions, short answers
+16. Final CTA
+17. Footer
 
-OUTPUT: Pure valid HTML only starting with <!DOCTYPE html>. No markdown. No backticks. No explanation.`;
+IMPORTANT: Keep every section's copy concise and punchy. Do not write long paragraphs. This must fit completely within the output token budget — prioritize finishing the full HTML document over writing extra-long copy in any one section.
+
+OUTPUT: Pure valid HTML only starting with <!DOCTYPE html>. No markdown. No backticks. No explanation. The response MUST end with a complete closing </html> tag.`;
 
   const userPrompt = `Build the complete long-form sales page:
 
@@ -841,6 +847,10 @@ Write every section with real, emotionally persuasive copy in Taglish where appr
   try {
     let raw = await callAI(sysPrompt, userPrompt);
     let cleaned = raw.replace(/^```html\n?/i,'').replace(/^```\n?/i,'').replace(/```$/gi,'').trim();
+
+    if (!cleaned.toLowerCase().includes('</html>')) {
+      throw new Error('Naputol ang generated page (hindi kumpleto). Subukan ulit i-click ang "I-generate" — minsan nangyayari ito sa mahahabang offer description. Pwede mo ring paikliin ang sagot sa "Kasama sa Offer" field.');
+    }
 
     // Swap placeholder tags with the real uploaded images (kept OUT of the AI prompt to avoid token overflow)
     if (heroB64) cleaned = cleaned.split('__HERO_IMG__').join(heroB64);
