@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FunnelCraft — AI Sales Page Generator by Digitera Levi</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0E0820;--bg2:#170F2E;--bg3:#1F1440;
+  --purple:#8B6FD4;--purple-light:#B49AE8;--purple-dim:rgba(139,111,212,0.12);--purple-border:rgba(139,111,212,0.2);
+  --gold:#D4A843;--gold-light:#ECC96A;--gold-dim:rgba(212,168,67,0.1);
+  --cream:#F2EDE4;--muted:#8A7AAA;--dim:#3A2E5A;
+}
+html,body{background:var(--bg);color:var(--cream);font-family:'Inter',sans-serif;height:100%;overflow:hidden;}
+body{display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{background:linear-gradient(90deg,rgba(139,111,212,0.08),rgba(212,168,67,0.08));border-bottom:1px solid var(--purple-border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--purple),var(--gold));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;font-family:'Playfair Display',serif;}
+.brand-name{font-size:14px;font-weight:700;color:var(--gold);}
+.brand-sub{font-size:10px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.badge{background:var(--gold-dim);border:1px solid rgba(212,168,67,0.25);color:var(--gold);font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;}
+.lang-toggle{display:flex;background:var(--bg3);border:1px solid var(--purple-border);border-radius:20px;padding:3px;gap:2px;}
+.lang-btn{border:none;background:transparent;color:var(--muted);font-size:11px;font-weight:700;padding:5px 12px;border-radius:16px;cursor:pointer;transition:.2s;}
+.lang-btn.active{background:var(--purple);color:#fff;}
+
+/* MAIN APP - 45/55 split */
+.app{display:grid;grid-template-columns:minmax(420px,45%) 1fr;flex:1;overflow:hidden;min-height:0;}
+
+/* LEFT PANEL */
+.left{background:var(--bg2);border-right:1px solid var(--purple-border);display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+
+.tabs{display:flex;border-bottom:1px solid var(--purple-border);background:var(--bg3);flex-shrink:0;}
+.tab{flex:1;padding:12px 6px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;color:var(--muted);border:none;background:transparent;transition:.2s;letter-spacing:.3px;border-bottom:2px solid transparent;}
+.tab.active{color:var(--gold);border-bottom:2px solid var(--gold);background:rgba(212,168,67,0.05);}
+.tab:hover:not(.active){color:var(--cream);}
+
+.panel{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
+.panel.active{display:flex;}
+.panel-scroll{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px;min-height:0;}
+.panel-scroll::-webkit-scrollbar{width:5px;}
+.panel-scroll::-webkit-scrollbar-thumb{background:var(--dim);border-radius:3px;}
+
+.step-header{padding:14px 24px 8px;border-bottom:1px solid var(--purple-border);flex-shrink:0;}
+.step-label{font-size:11px;font-weight:700;color:var(--purple-light);text-transform:uppercase;letter-spacing:1px;}
+.progress-bar{height:4px;background:rgba(139,111,212,0.12);margin:10px 0 0;border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--gold));border-radius:2px;transition:width .4s;}
+.dots{display:flex;gap:5px;margin-top:10px;}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(139,111,212,0.2);}
+.dot.done{background:var(--purple);}
+.dot.cur{background:var(--gold);width:18px;border-radius:4px;}
+
+.field{display:flex;flex-direction:column;gap:6px;}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--purple-light);}
+.hint{font-size:12px;color:var(--muted);background:rgba(139,111,212,0.07);border-left:3px solid var(--purple);padding:10px 12px;border-radius:0 8px 8px 0;line-height:1.6;}
+.hint b{color:var(--gold-light);font-weight:600;}
+input[type=text],textarea,select{background:var(--bg3);border:1px solid var(--purple-border);border-radius:9px;padding:12px 14px;font-size:13px;color:var(--cream);width:100%;outline:none;font-family:'Inter',sans-serif;transition:.2s;}
+input[type=text]:focus,textarea:focus,select:focus{border-color:var(--purple-light);background:rgba(139,111,212,0.05);box-shadow:0 0 0 3px rgba(139,111,212,0.1);}
+textarea{min-height:110px;resize:vertical;line-height:1.5;}
+select option{background:#1F1440;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sec-title{font-size:11px;font-weight:700;color:var(--purple-light);text-transform:uppercase;letter-spacing:1px;padding-top:8px;border-top:1px solid var(--purple-border);margin-top:6px;}
+
+.sug-btn{display:flex;align-items:center;gap:6px;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.2);color:var(--gold-light);font-size:11px;font-weight:700;padding:7px 14px;border-radius:7px;cursor:pointer;width:fit-content;transition:.2s;}
+.sug-btn:hover{background:rgba(212,168,67,0.16);}
+.sug-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.g-slot-wrap{display:flex;flex-direction:column;gap:5px;}
+.g-slot{position:relative;border:1.5px dashed var(--purple-border);border-radius:9px;aspect-ratio:4/3;cursor:pointer;background:rgba(255,255,255,0.02);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;overflow:hidden;transition:.2s;}
+.g-slot:hover{border-color:var(--purple-light);}
+.g-slot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;}
+.g-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;border-radius:7px;}
+.g-slot.has-img img{display:block;}
+.g-slot-icon{font-size:22px;color:var(--muted);}
+.g-slot-txt{font-size:10px;color:var(--muted);}
+.g-name{background:var(--bg3);border:1px solid var(--purple-border);border-radius:6px;padding:6px 9px;font-size:11px;color:var(--cream);width:100%;outline:none;font-family:'Inter',sans-serif;}
+.g-name::placeholder{color:var(--muted);}
+.add-slot-btn{background:rgba(139,111,212,0.07);border:1px dashed var(--purple-border);color:var(--purple-light);font-size:12px;padding:10px;border-radius:8px;cursor:pointer;width:100%;transition:.2s;font-weight:600;}
+.add-slot-btn:hover{background:rgba(139,111,212,0.13);}
+
+.upload-zone{border:1.5px dashed var(--purple-border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;position:relative;transition:.2s;background:rgba(255,255,255,0.02);min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.upload-zone:hover{border-color:var(--purple-light);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;}
+.upload-zone img{max-height:80px;max-width:100%;object-fit:contain;display:none;}
+.upload-zone.has-img img{display:block;}
+.upload-zone.has-img .uz-text{display:none;}
+.uz-icon{font-size:28px;color:var(--purple-light);}
+.uz-text{font-size:12px;color:var(--muted);line-height:1.5;}
+
+.palette-row{display:flex;gap:8px;margin:6px 0;}
+.pal-dot{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);cursor:pointer;transition:.2s;}
+.pal-dot:hover{transform:scale(1.1);}
+.color-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border:1px solid var(--purple-border);border-radius:9px;}
+.color-row label{font-size:12px;color:var(--muted);flex:1;}
+.color-row input[type=color]{width:38px;height:30px;border:none;background:transparent;cursor:pointer;border-radius:5px;}
+
+.pay-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--purple-border);border-radius:10px;cursor:pointer;transition:.2s;background:rgba(255,255,255,0.02);}
+.pay-opt:hover{border-color:var(--purple-light);}
+.pay-opt.sel{border-color:var(--gold);background:rgba(212,168,67,0.07);}
+.pay-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,0.05);flex-shrink:0;}
+.pay-info{flex:1;}
+.pay-name{font-size:13px;font-weight:700;color:var(--cream);}
+.pay-desc{font-size:11px;color:var(--muted);}
+.pay-tag{font-size:9px;font-weight:700;color:var(--gold-light);background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.25);padding:1px 6px;border-radius:8px;margin-left:6px;}
+.pay-check{width:18px;height:18px;border-radius:50%;border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pay-opt.sel .pay-check{background:var(--gold);border-color:var(--gold);color:#160920;}
+.pay-check-inner{font-size:11px;display:none;}
+.pay-opt.sel .pay-check-inner{display:block;}
+
+.panel-nav{display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--purple-border);background:var(--bg2);flex-shrink:0;}
+.btn-back{background:transparent;border:1px solid var(--purple-border);color:var(--muted);font-size:13px;font-weight:600;padding:11px 18px;border-radius:9px;cursor:pointer;transition:.2s;}
+.btn-back:hover{border-color:var(--purple-light);color:var(--cream);}
+.btn-next{flex:1;background:linear-gradient(135deg,var(--purple),#A07AEA);border:none;color:#fff;font-size:14px;font-weight:700;padding:12px;border-radius:9px;cursor:pointer;transition:.2s;}
+.btn-next:hover{opacity:.9;}
+.btn-gen{flex:1;background:linear-gradient(135deg,var(--gold),#E8B840);border:none;color:#160920;font-size:14px;font-weight:800;padding:12px;border-radius:9px;cursor:pointer;transition:.2s;}
+.btn-gen:hover{opacity:.9;}
+.btn-gen:disabled,.btn-next:disabled{opacity:.4;cursor:not-allowed;}
+
+.right{display:flex;flex-direction:column;background:var(--bg);overflow:hidden;min-height:0;}
+.out-header{padding:12px 20px;border-bottom:1px solid var(--purple-border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);flex-shrink:0;}
+.out-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.out-actions{display:flex;gap:8px;}
+.act-btn{background:var(--purple-dim);border:1px solid var(--purple-border);color:var(--purple-light);font-size:12px;font-weight:700;padding:8px 16px;border-radius:7px;cursor:pointer;transition:.2s;}
+.act-btn:hover{background:rgba(139,111,212,0.2);}
+.act-btn:disabled{opacity:.3;cursor:not-allowed;}
+.dl-btn{background:var(--gold-dim);border-color:rgba(212,168,67,0.3);color:var(--gold);}
+.dl-btn:hover{background:rgba(212,168,67,0.18);}
+
+.preview-area{flex:1;position:relative;background:#09061A;overflow:hidden;min-height:0;}
+.empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--muted);text-align:center;padding:2rem;}
+.empty-icon{font-size:56px;opacity:.25;}
+.empty-title{font-size:16px;font-weight:600;color:var(--muted);}
+.empty-sub{font-size:13px;color:rgba(138,122,170,.5);max-width:300px;line-height:1.7;}
+.loading-wrap{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(9,6,26,.97);z-index:10;}
+.loading-wrap.show{display:flex;}
+.spinner{width:52px;height:52px;border:3px solid rgba(139,111,212,.2);border-top-color:var(--purple-light);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:14px;color:var(--muted);}
+.loading-sub{font-size:12px;color:rgba(138,122,170,.4);}
+#preview-frame{width:100%;height:100%;border:none;display:none;background:#fff;}
+.api-key-bar{padding:10px 20px;background:rgba(212,168,67,0.06);border-bottom:1px solid rgba(212,168,67,0.15);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.api-key-bar input{flex:1;background:var(--bg3);border:1px solid var(--purple-border);border-radius:7px;padding:7px 12px;font-size:12px;color:var(--cream);outline:none;}
+.api-key-bar label{font-size:11px;color:var(--gold-light);font-weight:600;white-space:nowrap;}
+.api-key-bar a{color:var(--purple-light);text-decoration:underline;font-size:11px;}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto auto;overflow-y:auto;}
+  body{overflow-y:auto;height:auto;}
+  .left,.right{min-height:500px;}
+}
+
+/* LICENSE LOCK SCREEN */
+.fc-lock{position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;}
+.fc-lock-box{max-width:420px;width:100%;text-align:center;}
+.fc-lock-logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--gold));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;font-family:'Playfair Display',serif;margin:0 auto 18px;}
+.fc-lock-title{font-size:20px;font-weight:800;color:var(--cream);margin-bottom:6px;}
+.fc-lock-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.fc-lock input{background:var(--bg3);border:1px solid var(--purple-border);border-radius:9px;padding:14px 16px;font-size:14px;color:var(--cream);width:100%;outline:none;text-align:center;letter-spacing:1px;margin-bottom:12px;}
+.fc-lock input:focus{border-color:var(--purple-light);}
+.fc-lock-btn{width:100%;background:linear-gradient(90deg,var(--purple),var(--gold));border:none;color:#fff;font-weight:800;font-size:14px;padding:14px;border-radius:9px;cursor:pointer;}
+.fc-lock-btn:disabled{opacity:.5;cursor:not-allowed;}
+.fc-lock-err{color:#e8677d;font-size:12px;margin-top:12px;min-height:16px;}
+.fc-lock-checking{color:var(--muted);font-size:12px;margin-top:12px;min-height:16px;}
+</style>
+</head>
+<body>
+
+<div class="fc-lock" id="fc-lock">
+  <div class="fc-lock-box">
+    <div class="fc-lock-logo">FC</div>
+    <div class="fc-lock-title">FunnelCraft — Licensed Access</div>
+    <div class="fc-lock-sub">Enter the license key you were given to unlock the app. Each key is tied to one buyer and monitored for usage.</div>
+    <input type="text" id="fc-lock-input" placeholder="e.g. FC-JUAN-A1B2C3" autocomplete="off">
+    <button class="fc-lock-btn" id="fc-lock-btn" onclick="fcCheckLicense()">Unlock</button>
+    <div class="fc-lock-err" id="fc-lock-err"></div>
+    <div class="fc-lock-checking" id="fc-lock-checking"></div>
+  </div>
+</div>
+
+<div id="fc-app-wrap" style="display:none;flex-direction:column;height:100%;">
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">FC</div>
+    <div>
+      <div class="brand-name">FunnelCraft</div>
+      <div class="brand-sub">AI Sales Page Generator · by Digitera Levi</div>
+      <div style="font-size:10px;opacity:.4;margin-top:2px;">v2026.07.13</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="lang-tl" onclick="setLang('tl')">TL</button>
+    </div>
+    <div class="badge">✦ Powered by AI</div>
+    <button class="act-btn" id="save-draft-btn" onclick="saveDraft()" data-i18n="btnSaveDraft">💾 Save Draft</button>
+    <button class="act-btn" id="load-draft-btn" onclick="loadDraft()" data-i18n="btnLoadDraft">📂 Load Draft</button>
+  </div>
+</div>
+
+<div class="api-key-bar">
+  <label data-i18n="apiKeyLabel">Gemini API Key:</label>
+  <input type="text" id="api-key" data-i18n-ph="apiKeyPh" placeholder="AQ... (free — get one at aistudio.google.com/apikey)">
+  <a href="https://aistudio.google.com/apikey" target="_blank" data-i18n="apiKeyLink">Get a free key →</a>
+</div>
+
+<div class="app">
+  <div class="left">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('offer')">📝 <span data-i18n="tabOffer">Offer</span></button>
+      <button class="tab" onclick="switchTab('assets')">🖼️ <span data-i18n="tabAssets">Assets</span></button>
+      <button class="tab" onclick="switchTab('brand')">🎨 <span data-i18n="tabBrand">Brand</span></button>
+      <button class="tab" onclick="switchTab('payment')">💳 <span data-i18n="tabPayment">Payment</span></button>
+      <button class="tab" onclick="switchTab('funnel')">🔗 <span data-i18n="tabFunnel">Funnel</span></button>
+    </div>
+
+    <div class="panel active" id="tab-offer">
+      <div class="step-header">
+        <div class="step-label" id="step-label">Step 1 of 7 — Your Offer</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress" style="width:14%"></div></div>
+        <div class="dots" id="dots"></div>
+      </div>
+
+      <div class="panel-scroll">
+
+        <div class="fc-step active" data-s="1">
+          <div class="hint" data-i18n="hint1"><b>Example:</b> "I sell digital templates for coaches who want to look professional online without hiring a designer."</div>
+          <div class="field">
+            <div class="lbl" data-i18n="lbl1">What's your offer?</div>
+            <textarea id="f-offer" data-i18n-ph="ph1" placeholder="Describe your offer in 1-2 sentences..."></textarea>
+          </div>
+          <button class="sug-btn" onclick="suggest('offer')"><span data-i18n="sugOffer">✦ Help me write this</span></button>
+        </div>
+
+        <div class="fc-step" data-s="2">
+          <div class="hint" data-i18n="hint2"><b>Example:</b> "Busy freelancers who want to land higher-paying clients" or "New coaches who want a simple way to sell online without tech overwhelm"</div>
+          <div class="field">
+            <div class="lbl" data-i18n="lbl2">Who's your ideal buyer?</div>
+            <textarea id="f-buyer" data-i18n-ph="ph2" placeholder="Describe the person you want to sell to..."></textarea>
+          </div>
+          <button class="sug-btn" onclick="suggest('buyer')"><span data-i18n="sugGeneric">✦ Suggest for me</span></button>
+        </div>
+
+        <div class="fc-step" data-s="3">
+          <div class="hint" data-i18n="hint3"><b>Example:</b> "Doesn't know where to start, afraid to invest big, keeps wasting time on the wrong things"</div>
+          <div class="field">
+            <div class="lbl" data-i18n="lbl3">What's their biggest problem?</div>
+            <textarea id="f-problem" data-i18n-ph="ph3" placeholder="List their pain points..."></textarea>
+          </div>
+          <button class="sug-btn" onclick="suggest('problem')"><span data-i18n="sugGeneric">✦ Suggest for me</span></button>
+        </div>
+
+        <div class="fc-step" data-s="4">
+          <div class="hint" data-i18n="hint4"><b>Example:</b> "They'll launch their own online store within a week and land their first sale — even as a total beginner."</div>
+          <div class="field">
+            <div class="lbl" data-i18n="lbl4">What transformation do they get after?</div>
+            <textarea id="f-transform" data-i18n-ph="ph4" placeholder="Their life AFTER using your offer..."></textarea>
+          </div>
+          <button class="sug-btn" onclick="suggest('transform')"><span data-i18n="sugGeneric">✦ Suggest for me</span></button>
+        </div>
+
+        <div class="fc-step" data-s="5">
+          <div class="field">
+            <div class="lbl" data-i18n="lbl5">What's included in the offer? (one per line)</div>
+            <textarea id="f-includes" style="min-height:130px" data-i18n-ph="ph5" placeholder="1. PDF Playbook (47 pages)&#10;2. Canva Templates (50 designs)&#10;3. Video Tutorial (3 hrs)&#10;4. Private Community&#10;5. Bonus: 1:1 Call"></textarea>
+          </div>
+        </div>
+
+        <div class="fc-step" data-s="6">
+          <div class="row2">
+            <div class="field">
+              <div class="lbl" data-i18n="lblPrice">Selling Price</div>
+              <input type="text" id="f-price" data-i18n-ph="phPrice" placeholder="e.g. 97 or $97">
+            </div>
+            <div class="field">
+              <div class="lbl" data-i18n="lblOrigPrice">Original Price (cross-out)</div>
+              <input type="text" id="f-origprice" data-i18n-ph="phOrigPrice" placeholder="e.g. 297 or $297">
+            </div>
+          </div>
+          <div class="field" style="margin-top:6px;">
+            <div class="lbl" data-i18n="lblGuarantee">Guarantee (optional)</div>
+            <input type="text" id="f-guarantee" placeholder="30-day money back guarantee">
+          </div>
+          <div class="field" style="margin-top:6px;">
+            <div class="lbl">Real Offer Deadline (optional)</div>
+            <input type="datetime-local" id="f-deadline">
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">If set, a REAL countdown timer counts down to this exact date/time — no fake numbers. Leave blank to skip.</p>
+          </div>
+        </div>
+
+        <div class="fc-step" data-s="7">
+          <div class="row2">
+            <div class="field">
+              <div class="lbl" data-i18n="lblBrand">Brand Name</div>
+              <input type="text" id="f-brand" placeholder="Digitera Levi">
+            </div>
+            <div class="field">
+              <div class="lbl" data-i18n="lblProduct">Product Name</div>
+              <input type="text" id="f-product" placeholder="FunnelCraft">
+            </div>
+          </div>
+          <div class="field">
+            <div class="lbl" data-i18n="lblVideo">Video URL (YouTube embed — optional)</div>
+            <input type="text" id="f-video" placeholder="https://www.youtube.com/embed/VIDEO_ID">
+          </div>
+          <div class="field">
+            <div class="lbl" data-i18n="lblTone">Copywriting Tone</div>
+            <select id="f-tone">
+              <option value="english-modern">English — Modern & Conversational</option>
+              <option value="english-bold">English — Bold & High-Energy</option>
+              <option value="english-pro">English — Professional & Authoritative</option>
+              <option value="english-dr">English — Direct Response (Classic Halbert-style)</option>
+              <option value="taglish-friendly">Taglish — Friendly at Conversational</option>
+              <option value="taglish-bold">Taglish — Bold at High-Energy</option>
+              <option value="taglish-pro">Taglish — Professional at Credible</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="panel-nav">
+        <button class="btn-back" id="btn-back" onclick="nav(-1)" style="display:none" data-i18n="btnBack">← Back</button>
+        <button class="btn-next" id="btn-next" onclick="nav(1)" data-i18n="btnNext">Next →</button>
+        <button class="btn-gen" id="btn-gen" onclick="generate()" style="display:none" data-i18n="btnGen">✦ Generate My Sales Page</button>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-assets">
+      <div class="panel-scroll">
+        <div class="sec-title" style="margin-top:0;border-top:none;" data-i18n="secHero">Hero Image and Logo</div>
+
+        <div class="field">
+          <div class="lbl" data-i18n="lblHero">Hero Cover Image</div>
+          <div class="upload-zone" id="hero-zone">
+            <input type="file" accept="image/*" onchange="uploadSingle(event,'hero-zone','hero-img','hero')">
+            <img id="hero-img" alt="hero cover">
+            <div class="uz-icon">🖼️</div>
+            <div class="uz-text" data-i18n="uzHero">Upload your hero image<br><span style="font-size:10px;">PNG / JPG — 1200×628px ideal</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="lbl" data-i18n="lblLogo">Brand Logo</div>
+          <div class="upload-zone" id="logo-zone">
+            <input type="file" accept="image/*" onchange="uploadSingle(event,'logo-zone','logo-img','logo')">
+            <img id="logo-img" alt="brand logo">
+            <div class="uz-icon">✦</div>
+            <div class="uz-text" data-i18n="uzLogo">Upload your logo<br><span style="font-size:10px;">PNG transparent preferred</span></div>
+          </div>
+        </div>
+
+        <div class="sec-title" data-i18n="secGallery">Product Gallery Assets</div>
+        <p style="font-size:12px;color:var(--muted);" data-i18n="pGallery">Upload product images and name them — these get placed into the offer section of your sales page.</p>
+
+        <div class="gallery-grid" id="gallery-grid"></div>
+        <button class="add-slot-btn" onclick="addSlot()" data-i18n="btnAddSlot">+ Add product image</button>
+
+        <div class="sec-title">Proof / Testimonials / Samples</div>
+        <p style="font-size:12px;color:var(--muted);">Show real proof — screenshots, sample outputs, before/after photos, testimonial cards. Each block auto-alternates image left/right so the page doesn't look repetitive. Click ⇄ on any block to manually flip it.</p>
+
+        <div id="proof-blocks"></div>
+        <button class="add-slot-btn" onclick="addProofBlock()">+ Add Proof Block</button>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-brand">
+      <div class="panel-scroll">
+        <div class="sec-title" style="margin-top:0;border-top:none;" data-i18n="secPalette">Color Palette Presets</div>
+        <div class="field">
+          <div class="lbl" data-i18n="lblPalette">Choose a preset palette</div>
+          <select id="palette-sel" onchange="applyPreset()">
+            <option value="midnight-gold">👑 Midnight Gold — Dark Purple + Gold</option>
+            <option value="dark-cocoa">🍫 Dark Cocoa — Premium Dark Brown</option>
+            <option value="lilac-cream">💜 Lilac + Cream — Light Premium</option>
+            <option value="navy-gold">🌊 Navy Blue + Gold</option>
+            <option value="black-fire">🔥 Black + Fire Orange</option>
+            <option value="forest-cream">🌿 Forest Green + Cream</option>
+            <option value="rose-gold">🌸 Rose + Gold</option>
+            <option value="dusty-pink">🌷 Dusty Pink — Soft Editorial</option>
+            <option value="editorial-mono">⚫ Editorial Mono — Black &amp; White</option>
+            <option value="galaxy-purple">🌌 Galaxy Purple — Dreamy Cosmic</option>
+            <option value="mountain-blue">🏔️ Mountain Blue — Calm &amp; Cool</option>
+            <option value="navy-teal-gradient">🌊 Navy-Teal Gradient</option>
+            <option value="pink-teal-gradient">🌅 Pink-Teal Gradient</option>
+            <option value="purple-dream-gradient">💜 Purple Dream Gradient</option>
+            <option value="black-white-gradient">⚪ Black-White Gradient</option>
+            <option value="crimson-rose-gradient">❤️ Crimson Rose Gradient</option>
+            <option value="amber-honey-gradient">🍯 Amber Honey Gradient</option>
+            <option value="emerald-mint-gradient">💚 Emerald Mint Gradient</option>
+            <option value="sunset-orange-gradient">🧡 Sunset Orange Gradient</option>
+            <option value="custom">✨ Custom — I'll pick my own</option>
+          </select>
+        </div>
+
+        <div class="lbl" data-i18n="lblPreview">Palette preview</div>
+        <div style="display:flex;gap:10px;align-items:center;background:var(--bg3);padding:12px 14px;border-radius:9px;border:1px solid var(--purple-border);">
+          <div class="pal-dot" id="pd-bg" title="Background"></div>
+          <div class="pal-dot" id="pd-acc" title="Accent"></div>
+          <div class="pal-dot" id="pd-sec" title="Secondary"></div>
+          <div class="pal-dot" id="pd-txt" title="Text"></div>
+          <span style="font-size:11px;color:var(--muted);margin-left:6px;">BG · Accent · Secondary · Text</span>
+        </div>
+
+        <div id="custom-colors" style="display:none;flex-direction:column;gap:8px;">
+          <div class="sec-title" data-i18n="secCustom">Custom Colors</div>
+          <div class="color-row">
+            <label data-i18n="clrBg">Page Background</label>
+            <input type="color" id="c-bg" value="#0E0820" oninput="updatePalPreview()">
+          </div>
+          <div class="color-row">
+            <label data-i18n="clrAcc">Accent / Primary Color</label>
+            <input type="color" id="c-acc" value="#8B6FD4" oninput="updatePalPreview()">
+          </div>
+          <div class="color-row">
+            <label data-i18n="clrSec">Secondary / Gold Color</label>
+            <input type="color" id="c-sec" value="#D4A843" oninput="updatePalPreview()">
+          </div>
+          <div class="color-row">
+            <label data-i18n="clrTxt">Text / Headline Color</label>
+            <input type="color" id="c-txt" value="#F2EDE4" oninput="updatePalPreview()">
+          </div>
+          <div class="field" style="flex-direction:row;align-items:center;gap:10px;margin-top:6px;">
+            <input type="checkbox" id="c-gradient-on" style="width:auto;" onchange="toggleCustomGradient()">
+            <label for="c-gradient-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Use gradient background instead of solid</label>
+          </div>
+          <div class="color-row" id="c-gradient-mid-row" style="display:none;">
+            <label>Gradient Middle Color</label>
+            <input type="color" id="c-bg-mid" value="#5A3F8C" oninput="updatePalPreview()">
+          </div>
+          <div class="color-row" id="c-gradient-end-row" style="display:none;">
+            <label>Gradient End Color</label>
+            <input type="color" id="c-bg2" value="#3A2B5C" oninput="updatePalPreview()">
+          </div>
+        </div>
+
+        <div class="sec-title" data-i18n="secFont">Font Pairing</div>
+        <div class="field">
+          <div class="lbl" data-i18n="lblFont">Choose a font</div>
+          <select id="font-sel">
+            <option value="poppins">Poppins — Modern & International (recommended)</option>
+            <option value="dm-sans">DM Sans — Clean Minimalist</option>
+            <option value="inter-playfair">Inter + Playfair Display (Premium Classic)</option>
+            <option value="lora-inter">Lora + Inter — Editorial</option>
+          </select>
+        </div>
+
+        <div class="sec-title" data-i18n="secBtnStyle">Button Style</div>
+        <div class="field">
+          <div class="lbl" data-i18n="lblBtnStyle">CTA Button Style</div>
+          <select id="btn-style">
+            <option value="gradient">Gradient (default)</option>
+            <option value="solid">Solid Fill</option>
+            <option value="outline">Outline / Ghost</option>
+            <option value="pill">Pill Shape</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-payment">
+      <div class="panel-scroll">
+        <div class="sec-title" style="margin-top:0;border-top:none;" data-i18n="secPayment">Universal Payment Gateway Router</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="pPayment">Choose a payment method — this gets wired into every CTA button on your generated sales page.</p>
+
+        <div style="display:flex;flex-direction:column;gap:8px;" id="pay-list">
+          <div class="pay-opt" onclick="selectPay(this,'paypal')">
+            <div class="pay-icon">🅿️</div>
+            <div class="pay-info"><div class="pay-name">PayPal <span class="pay-tag">International</span></div><div class="pay-desc" data-i18n="payPaypalDesc">PayPal.me link or checkout URL</div></div>
+            <div class="pay-check"><span class="pay-check-inner">✓</span></div>
+          </div>
+          <div class="pay-opt sel" onclick="selectPay(this,'stripe')">
+            <div class="pay-icon">⚡</div>
+            <div class="pay-info"><div class="pay-name">Stripe <span class="pay-tag">International</span></div><div class="pay-desc" data-i18n="payStripeDesc">Stripe payment link or checkout</div></div>
+            <div class="pay-check"><span class="pay-check-inner">✓</span></div>
+          </div>
+          <div class="pay-opt" onclick="selectPay(this,'wise')">
+            <div class="pay-icon">🌐</div>
+            <div class="pay-info"><div class="pay-name">Wise <span class="pay-tag">International</span></div><div class="pay-desc" data-i18n="payWiseDesc">Wise payment link or account details</div></div>
+            <div class="pay-check"><span class="pay-check-inner">✓</span></div>
+          </div>
+          <div class="pay-opt" onclick="selectPay(this,'systeme')">
+            <div class="pay-icon">🔧</div>
+            <div class="pay-info"><div class="pay-name">Systeme.io</div><div class="pay-desc" data-i18n="paySystemeDesc">Your Systeme.io checkout page URL</div></div>
+            <div class="pay-check"><span class="pay-check-inner">✓</span></div>
+          </div>
+          <div class="pay-opt" onclick="selectPay(this,'gcash')">
+            <div class="pay-icon">💚</div>
+            <div class="pay-info"><div class="pay-name">GCash <span class="pay-tag">PH</span></div><div class="pay-desc" data-i18n="payGcashDesc">Direct number or GCash link</div></div>
+            <div class="pay-check"><span class="pay-check-inner">✓</span></div>
+          </div>
+          <div class="pay-opt" onclick="selectPay(this,'maya')">
+            <div class="pay-icon">🔵</div>
+            <div class="pay-info"><div class="pay-name">Maya (PayMaya) <span class="pay-tag">PH</span></div><div class="pay-desc" data-i18n="payMayaDesc">Maya payment link or QR URL</div></div>
+            <div class="pay-check"><span class="pay-check-inner">✓</span></div>
+          </div>
+          <div class="pay-opt" onclick="selectPay(this,'link')">
+            <div class="pay-icon">🔗</div>
+            <div class="pay-info"><div class="pay-name">Custom Link</div><div class="pay-desc" data-i18n="payLinkDesc">Any checkout URL</div></div>
+            <div class="pay-check"><span class="pay-check-inner">✓</span></div>
+          </div>
+          <div class="pay-opt" onclick="selectPay(this,'direct')">
+            <div class="pay-icon">📱</div>
+            <div class="pay-info"><div class="pay-name" data-i18n="payDirectName">Direct / Manual</div><div class="pay-desc" data-i18n="payDirectDesc">Shows instructions to the buyer as a popup</div></div>
+            <div class="pay-check"><span class="pay-check-inner">✓</span></div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:10px;">
+          <div class="lbl" id="pay-lbl">Stripe Payment Link</div>
+          <textarea id="pay-val" data-i18n-ph="phPayVal" rows="3" placeholder="For Direct/Manual: put each payment option on its own line, e.g.&#10;GCash: 0917-XXX-XXXX (Juan Dela Cruz)&#10;Maya: 0917-XXX-XXXX&#10;After paying, send your receipt/screenshot to Messenger: m.me/yourpage"></textarea>
+        </div>
+
+        <div class="field">
+          <div class="lbl">Payment QR Code (optional, for Direct/Manual)</div>
+          <div class="upload-zone" id="payqr-zone">
+            <input type="file" accept="image/*" onchange="uploadSingle(event,'payqr-zone','payqr-img','payqr')">
+            <img id="payqr-img" alt="payment qr code">
+            <div class="uz-icon">📷</div>
+            <div class="uz-text">Upload your GCash/Maya QR code<br><span style="font-size:10px;">Shown in the payment instructions popup</span></div>
+          </div>
+        </div>
+
+        <div class="sec-title" data-i18n="secBump">Order Bump (Optional)</div>
+        <p style="font-size:12px;color:var(--muted);" data-i18n="pBump">An add-on offer shown before checkout — one-click upsell.</p>
+        <div class="field">
+          <div class="lbl" data-i18n="lblBumpName">Order Bump Name</div>
+          <input type="text" id="bump-name" data-i18n-ph="phBumpName" placeholder="e.g. Template Pack Upgrade">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <div class="lbl" data-i18n="lblBumpPrice">Bump Price</div>
+            <input type="text" id="bump-price" data-i18n-ph="phBumpPrice" placeholder="e.g. 27 or $27">
+          </div>
+        </div>
+        <div class="field">
+          <div class="lbl">Bundle Checkout Link (optional)</div>
+          <input type="text" id="bump-bundle-link" placeholder="Checkout URL to use when the bump is checked — leave blank to use the same link as the base offer">
+        </div>
+        <div class="field" style="margin-top:6px;">
+          <input type="checkbox" id="f-checkout-form-on" style="width:auto;">
+          <label for="f-checkout-form-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Collect Full Name + Email right on the sales page before checkout (saved to your Google Sheet, same as opt-in leads)</label>
+        </div>
+
+        <div class="sec-title">🚪 Exit-Intent Popup (Optional)</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;">Shows a last-chance offer when a visitor's mouse moves toward closing the tab — a proven way to recover visitors who were about to leave. Triggers once per visit.</p>
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;">
+          <input type="checkbox" id="f-exit-on" style="width:auto;">
+          <label for="f-exit-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Enable exit-intent popup</label>
+        </div>
+        <div class="field">
+          <div class="lbl">Exit Popup Headline</div>
+          <input type="text" id="f-exit-headline" placeholder="Wait! Don't Miss This...">
+        </div>
+        <div class="field">
+          <div class="lbl">Exit Popup Offer Text</div>
+          <textarea id="f-exit-offer" style="min-height:60px" placeholder="Before you go — get an extra 10% off with code SAVE10 at checkout."></textarea>
+        </div>
+
+        <div class="sec-title">🏷️ Coupon Code (Optional)</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;">Adds a small "Have a coupon code?" field near the price. Great for influencer/affiliate promos. This is a simple client-side check, not a secure payment discount — the price shown is just a message, not an automatic recalculation at checkout.</p>
+        <div class="field">
+          <div class="lbl">Coupon Code</div>
+          <input type="text" id="f-coupon-code" placeholder="e.g. SAVE10">
+        </div>
+        <div class="field">
+          <div class="lbl">Message Shown When Code Is Correct</div>
+          <input type="text" id="f-coupon-message" placeholder="e.g. 10% discount applied! Your special price: ₱897">
+        </div>
+
+        <div class="sec-title">🎁 Free Bonuses (Optional)</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;">Value stacking — showing "free" bonuses with a dollar value BEFORE the price makes the final offer feel like a steal. Shown right above your price on the sales page, with an automatic running total.</p>
+        <div class="field">
+          <div class="lbl">Bonuses (format: Name | Value | Description — one per line)</div>
+          <textarea id="f-bonuses-list" style="min-height:90px" placeholder="1-on-1 Onboarding Call | 97 | 30 minutes to get you set up fast&#10;Private Community Access | 47 | Get support from other buyers&#10;Bonus Template Pack | 67 | 20 extra done-for-you templates"></textarea>
+        </div>
+
+        <div class="sec-title" data-i18n="secTracking">Tracking &amp; Analytics (Optional)</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="pTracking">Paste your pixel ID OR the full snippet Facebook/Google/TikTok gave you — either works, we auto-extract the ID. Leave blank to skip.</p>
+        <div class="field">
+          <div class="lbl">Meta (Facebook) Pixel ID</div>
+          <input type="text" id="f-metapixel" placeholder="ID lang o buong snippet — parehong okay">
+        </div>
+        <div class="field">
+          <div class="lbl">Google Analytics 4 ID</div>
+          <input type="text" id="f-ga4" placeholder="G-XXXXXXXXXX o buong snippet — parehong okay">
+        </div>
+        <div class="field">
+          <div class="lbl">TikTok Pixel ID</div>
+          <input type="text" id="f-tiktokpixel" placeholder="ID lang o buong snippet — parehong okay">
+        </div>
+        <div class="field">
+          <div class="lbl">Social Share Preview Image URL (optional)</div>
+          <input type="text" id="f-og-image" placeholder="A hosted image link (Google Drive/Imgur/etc) — shown when the link is shared on Messenger/Facebook">
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">Must be a real hosted image link, not an upload — sharing platforms can't read locally-uploaded images. Leave blank to skip the preview image (title/description will still show).</p>
+        </div>
+
+        <div class="sec-title" data-i18n="secLegal">Legal Pages (Recommended for US buyers)</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="pLegal">Adds Privacy Policy, Terms, and Disclaimer links in the footer — opens as a popup on the generated page. No extra files, no hosting needed.</p>
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;">
+          <input type="checkbox" id="f-legal-toggle" style="width:auto;" checked>
+          <label for="f-legal-toggle" style="font-size:12px;color:var(--cream);cursor:pointer;" data-i18n="lblLegalToggle">Include legal pages footer links</label>
+        </div>
+        <div class="field">
+          <div class="lbl" data-i18n="lblLegalBiz">Business Name (for legal text)</div>
+          <input type="text" id="f-legal-biz" placeholder="e.g. Digitera Levi LLC">
+        </div>
+        <div class="field">
+          <div class="lbl" data-i18n="lblLegalEmail">Support/Contact Email</div>
+          <input type="text" id="f-legal-email" placeholder="e.g. support@yourbrand.com">
+        </div>
+
+        <div class="sec-title" data-i18n="secFinal">Final Step</div>
+        <button class="btn-gen" style="width:100%;margin-top:6px;" onclick="generate()" data-i18n="btnGen">✦ Generate My Sales Page</button>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-funnel">
+      <div class="panel-scroll">
+        <div class="sec-title" style="margin-top:0;border-top:none;">🔗 Multi-Page Funnel (Optional)</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;">Turns your single sales page into a full funnel — still ONE downloadable HTML file, no ZIP. Pages are switched using a link (e.g. yourfile.html#upsell) — you can even paste that as the "after payment redirect URL" in Stripe/PayPal/Systeme.io.</p>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;">
+          <input type="checkbox" id="f-optin-on" style="width:auto;">
+          <label for="f-optin-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Include Opt-in Page (before Sales)</label>
+        </div>
+        <div class="field">
+          <div class="lbl">Lead Magnet Name</div>
+          <input type="text" id="f-optin-magnet" placeholder="e.g. Free 5-Day Funnel Checklist">
+        </div>
+        <div class="field">
+          <div class="lbl">Opt-in Headline</div>
+          <input type="text" id="f-optin-headline" placeholder="e.g. Get instant access to the checklist">
+        </div>
+        <div class="field">
+          <div class="lbl">Email Form Embed Code (optional)</div>
+          <textarea id="f-optin-embed" style="min-height:70px" placeholder="Leave blank to use a simple demo form that just continues to the sales page (does NOT save emails)"><form id="fc-optin-form" style="display:flex;flex-direction:column;gap:12px;">
+  <input required type="email" id="fc-optin-email" placeholder="Your best email" style="padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:inherit;font-size:15px;">
+  <button type="submit" id="fc-optin-btn" style="padding:15px 20px;border-radius:8px;border:none;background:#6C4CE0;color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Send Me the Free Guide &rarr;</button>
+</form>
+<script>
+document.getElementById('fc-optin-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  var email = document.getElementById('fc-optin-email').value.trim();
+  var btn = document.getElementById('fc-optin-btn');
+  btn.disabled = true;
+  btn.textContent = 'Please wait...';
+
+  fetch('PASTE_YOUR_APPS_SCRIPT_URL_HERE', {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ email: email, source: '__FC_SOURCE__' })
+  })
+  .then(function(){ window.location.hash = 'sales'; })
+  .catch(function(){ window.location.hash = 'sales'; });
+});
+</script></textarea>
+          <div style="background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.25);border-radius:8px;padding:12px 14px;margin-top:8px;font-size:12px;color:var(--muted);line-height:1.7;">
+            <strong style="color:var(--gold);">⚠️ You must set this up before this form will work.</strong> This form is pre-built to auto-save emails to a Google Sheet AND auto-email the buyer their download link — but it needs YOUR OWN Google Sheet + Apps Script connected first.<br>
+            <strong style="color:var(--cream);">One-time setup:</strong> replace <code>PASTE_YOUR_APPS_SCRIPT_URL_HERE</code> above with your own Apps Script Web App URL (see your setup guide for how to create one — it takes about 5 minutes).<br>
+            <strong style="color:var(--cream);">Prefer a different tool?</strong> Already using Mailchimp, ConvertKit, or Systeme.io? You can paste their embed code here instead — but note it won't auto-continue to the sales page or trigger auto-email delivery unless you add that logic yourself.
+          </div>
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px;">
+          <input type="checkbox" id="f-upsell-on" style="width:auto;">
+          <label for="f-upsell-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Include Upsell Page (after checkout)</label>
+        </div>
+        <div class="field">
+          <div class="lbl">Upsell Offer Name</div>
+          <input type="text" id="f-upsell-name" placeholder="e.g. Done-For-You Template Vault">
+        </div>
+        <div class="field">
+          <div class="lbl">Upsell Price</div>
+          <input type="text" id="f-upsell-price" placeholder="e.g. 47 or $47">
+        </div>
+        <div class="field">
+          <div class="lbl">Upsell Payment Method</div>
+          <select id="f-upsell-paymethod" onchange="fcToggleUpsellPayFields()" style="background:var(--bg3);border:1px solid var(--purple-border);border-radius:9px;padding:12px 14px;font-size:13px;color:var(--cream);width:100%;outline:none;">
+            <option value="link">Payment Link (Stripe/PayPal)</option>
+            <option value="manual">Manual — GCash/Maya</option>
+          </select>
+        </div>
+        <div class="field" id="f-upsell-link-wrap">
+          <div class="lbl">Upsell Payment Link</div>
+          <input type="text" id="f-upsell-payval" placeholder="Stripe/PayPal link for THIS upsell only">
+        </div>
+        <div class="field" id="f-upsell-manual-wrap" style="display:none;">
+          <div class="lbl">GCash Number</div>
+          <input type="text" id="f-upsell-gcash" placeholder="e.g. 09231893139">
+        </div>
+        <div class="field" id="f-upsell-manual-wrap2" style="display:none;">
+          <div class="lbl">Maya Number</div>
+          <input type="text" id="f-upsell-maya" placeholder="e.g. 09461825985">
+        </div>
+        <div class="field" id="f-upsell-manual-wrap3" style="display:none;">
+          <div class="lbl">Account Name</div>
+          <input type="text" id="f-upsell-acctname" placeholder="e.g. Levi Ugaban Mariano">
+        </div>
+        <div class="field" id="f-upsell-manual-wrap4" style="display:none;">
+          <div class="lbl">Facebook Messenger Link (where buyers send payment proof)</div>
+          <input type="text" id="f-upsell-proof-contact" placeholder="e.g. m.me/YourPageName">
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">Paste any format — m.me/YourPage, a full https:// link, or just your page username. It'll automatically become a clickable link.</p>
+        </div>
+        <div class="field" id="f-upsell-manual-wrap5" style="display:none;">
+          <div class="lbl">Instructions for Buyer (optional — leave blank to use the default)</div>
+          <textarea id="f-upsell-instructions" placeholder="e.g. After sending payment, screenshot your receipt and send it to our Messenger below. Access will be sent within 24 hours."></textarea>
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px;">
+          <input type="checkbox" id="f-downsell-on" style="width:auto;">
+          <label for="f-downsell-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Include Downsell Page (shown if buyer declines the upsell)</label>
+        </div>
+        <div class="field">
+          <div class="lbl">Downsell Offer Name</div>
+          <input type="text" id="f-downsell-name" placeholder="e.g. Starter Template Pack (instead of the full bundle)">
+        </div>
+        <div class="field">
+          <div class="lbl">Downsell Price</div>
+          <input type="text" id="f-downsell-price" placeholder="e.g. $19">
+        </div>
+        <div class="field">
+          <div class="lbl">Downsell Payment Link</div>
+          <input type="text" id="f-downsell-payval" placeholder="Stripe/PayPal link for THIS downsell only">
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px;">
+          <input type="checkbox" id="f-thankyou-on" style="width:auto;">
+          <label for="f-thankyou-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Include Thank You / Delivery Page</label>
+        </div>
+        <div class="field">
+          <div class="lbl">Delivery Instructions</div>
+          <textarea id="f-thankyou-delivery" placeholder="e.g. Check your email for access, or click below to access your course. Tip: gumamit ng bagong linya (Enter) para sa bawat hakbang, hal:&#10;Step 1: Check your inbox&#10;Step 2: Click the download button below"></textarea>
+        </div>
+        <div class="field">
+          <div class="lbl">Access Link (course/download URL)</div>
+          <input type="text" id="f-thankyou-link" placeholder="https://...">
+        </div>
+
+        <div class="sec-title" style="margin-top:20px;">🌐 Website Pages (Optional)</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;">Add basic info pages to round out your funnel into a small website. Same file, same navigation pattern (#about, #services, #faq, #contact).</p>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;">
+          <input type="checkbox" id="f-about-on" style="width:auto;">
+          <label for="f-about-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Include About Us Page</label>
+        </div>
+        <div class="field">
+          <div class="lbl">About Text</div>
+          <textarea id="f-about-text" placeholder="Tell buyers who you are and why they should trust you..."></textarea>
+        </div>
+        <div class="field">
+          <div class="lbl">About Photo (optional)</div>
+          <div class="upload-zone" id="about-zone">
+            <input type="file" accept="image/*" onchange="uploadSingle(event,'about-zone','about-img','about')">
+            <img id="about-img" alt="about photo">
+            <div class="uz-icon">🙂</div>
+            <div class="uz-text">Upload a photo of you or your team<br><span style="font-size:10px;">Optional — shown on the About page</span></div>
+          </div>
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px;">
+          <input type="checkbox" id="f-services-on" style="width:auto;">
+          <label for="f-services-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Include Services/Products Page</label>
+        </div>
+        <div class="field">
+          <div class="lbl">List your services/products (one per line)</div>
+          <textarea id="f-services-list" placeholder="Service 1&#10;Service 2&#10;Service 3"></textarea>
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px;">
+          <input type="checkbox" id="f-faq-on" style="width:auto;">
+          <label for="f-faq-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Include FAQ Page</label>
+        </div>
+        <div class="field">
+          <div class="lbl">FAQs (format: Question | Answer — one pair per line)</div>
+          <textarea id="f-faq-list" placeholder="How long does delivery take? | Within 24 hours&#10;Do you offer refunds? | Yes, 7-day guarantee&#10;&#10;Tip: kung mahaba ang sagot mo (maraming linya), maglagay ng BLANK NA LINYA bago ang susunod na tanong para hindi maghalo."></textarea>
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px;">
+          <input type="checkbox" id="f-contact-on" style="width:auto;">
+          <label for="f-contact-on" style="font-size:12px;color:var(--cream);cursor:pointer;">Include Contact Page</label>
+        </div>
+        <div class="field">
+          <div class="lbl">Contact Email</div>
+          <input type="text" id="f-contact-email" placeholder="hello@yourbrand.com">
+        </div>
+        <div class="field">
+          <div class="lbl">Facebook/Messenger Link (optional)</div>
+          <input type="text" id="f-contact-messenger" placeholder="m.me/YourPage">
+        </div>
+        <div class="field">
+          <div class="lbl">Facebook Page (optional)</div>
+          <input type="text" id="f-social-facebook" placeholder="facebook.com/YourPage">
+        </div>
+        <div class="field">
+          <div class="lbl">Instagram (optional)</div>
+          <input type="text" id="f-social-instagram" placeholder="instagram.com/YourHandle">
+        </div>
+        <div class="field">
+          <div class="lbl">TikTok (optional)</div>
+          <input type="text" id="f-social-tiktok" placeholder="tiktok.com/@YourHandle">
+        </div>
+        <div class="field">
+          <div class="lbl">YouTube (optional)</div>
+          <input type="text" id="f-social-youtube" placeholder="youtube.com/@YourChannel">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="right">
+    <div class="out-header">
+      <span class="out-label" id="out-label" data-i18n="outReady">Output — Canvas ready</span>
+      <div class="out-actions">
+        <button class="act-btn" id="preview-desktop-btn" onclick="fcSetPreviewMode('desktop')" style="opacity:1;">🖥️ Desktop</button>
+        <button class="act-btn" id="preview-mobile-btn" onclick="fcSetPreviewMode('mobile')" style="opacity:.5;">📱 Mobile</button>
+        <button class="act-btn" id="copy-btn" onclick="copyOut()" disabled data-i18n="btnCopy">Copy HTML</button>
+        <button class="act-btn dl-btn" id="dl-btn" onclick="dlPage()" disabled data-i18n="btnDl">⬇ Download</button>
+      </div>
+    </div>
+    <div class="preview-area" id="preview-area-wrap" style="display:flex;justify-content:center;background:var(--bg2);">
+      <div class="empty-state" id="emp">
+        <div class="empty-icon">📄</div>
+        <div class="empty-title" data-i18n="emptyTitle">No preview yet</div>
+        <div class="empty-sub" data-i18n="emptySub">Add your Gemini API key above, fill out the Offer tab, upload your assets, pick your brand colors and payment method — then click "Generate."</div>
+      </div>
+      <div class="loading-wrap" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-txt" data-i18n="loadingTxt">Building your sales page...</div>
+        <div class="loading-sub" data-i18n="loadingSub">Writing your full long-form copy — just a moment (30-60 sec)</div>
+      </div>
+      <iframe id="preview-frame" title="Sales page preview" style="width:100%;transition:width .25s ease;"></iframe>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============ LICENSE CHECK ============
+// Replace this with YOUR deployed Cloudflare Worker URL (see setup guide).
+const FC_LICENSE_WORKER_URL = 'https://funnelcraft-license.marianolevi25.workers.dev';
+const FC_LICENSE_CACHE_KEY = 'funnelcraft_license_ok';
+const FC_LICENSE_CACHE_DAYS = 7; // re-checks with the server every 7 days
+
+function fcCachedLicenseValid() {
+  try {
+    const raw = localStorage.getItem(FC_LICENSE_CACHE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    const ageDays = (Date.now() - data.ts) / 86400000;
+    return data.ok === true && ageDays < FC_LICENSE_CACHE_DAYS;
+  } catch(e) { return false; }
+}
+
+function fcUnlockApp() {
+  document.getElementById('fc-lock').style.display = 'none';
+  document.getElementById('fc-app-wrap').style.display = 'flex';
+}
+
+async function fcCheckLicense() {
+  const input = document.getElementById('fc-lock-input');
+  const btn = document.getElementById('fc-lock-btn');
+  const err = document.getElementById('fc-lock-err');
+  const checking = document.getElementById('fc-lock-checking');
+  const key = input.value.trim();
+  err.textContent = '';
+  if (!key) { err.textContent = 'Please enter your license key.'; return; }
+
+  btn.disabled = true;
+  checking.textContent = 'Checking license...';
+
+  try {
+    const res = await fetch(`${FC_LICENSE_WORKER_URL}?key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    checking.textContent = '';
+    btn.disabled = false;
+
+    if (data.valid) {
+      localStorage.setItem(FC_LICENSE_CACHE_KEY, JSON.stringify({ ok: true, ts: Date.now(), key }));
+      fcUnlockApp();
+    } else {
+      const reasons = {
+        invalid_key: 'That license key was not found. Please check for typos.',
+        revoked: 'This license key has been deactivated. Contact the seller for help.',
+        missing_key: 'Please enter your license key.'
+      };
+      err.textContent = reasons[data.reason] || 'Invalid license key.';
+    }
+  } catch(e) {
+    checking.textContent = '';
+    btn.disabled = false;
+    err.textContent = 'Could not reach the license server. Check your internet connection and try again.';
+  }
+}
+
+document.getElementById('fc-lock-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') fcCheckLicense();
+});
+
+if (fcCachedLicenseValid()) {
+  fcUnlockApp();
+}
+// ============ END LICENSE CHECK ============
+
+let curStep = 1;
+const totalSteps = 7;
+let generatedHTML = '';
+let selectedPay = 'stripe';
+let heroB64 = '', logoB64 = '', aboutB64 = '', payqrB64 = '';
+let galleryItems = [];
+let proofItems = [];
+let currentLang = 'en';
+
+const palettes = {
+  'midnight-gold':{bg:'#0E0820',acc:'#8B6FD4',sec:'#D4A843',txt:'#F2EDE4'},
+  'dark-cocoa':{bg:'#150A05',acc:'#C4783A',sec:'#E8C97A',txt:'#F5EDDC'},
+  'lilac-cream':{bg:'#FAF6FF',acc:'#7C5CBF',sec:'#C4963B',txt:'#2D1F4A'},
+  'navy-gold':{bg:'#08122A',acc:'#2563EB',sec:'#F59E0B',txt:'#EFF6FF'},
+  'black-fire':{bg:'#0A0808',acc:'#DC4A2A',sec:'#F97316',txt:'#FFF5F2'},
+  'forest-cream':{bg:'#0A1810',acc:'#16A34A',sec:'#CA8A04',txt:'#F0FDF4'},
+  'rose-gold':{bg:'#1A090F',acc:'#E879A0',sec:'#D4A843',txt:'#FFF0F6'},
+  'dusty-pink':{bg:'#F5E6E2',acc:'#C97B84',sec:'#8B4A52',txt:'#3A2226'},
+  'editorial-mono':{bg:'#F5F5F3',acc:'#1A1A1A',sec:'#6B6B6B',txt:'#1A1A1A'},
+  'galaxy-purple':{bg:'#2E1F4E',acc:'#B48FE0',sec:'#F4C9E0',txt:'#F5EEFF'},
+  'mountain-blue':{bg:'#0E2A3D',acc:'#4A90B8',sec:'#A8D0E6',txt:'#EAF4FA'},
+  'navy-teal-gradient':{bg:'#0F2436',acc:'#4A90B8',sec:'#C9D8DE',txt:'#F0F5F7',gradient:'linear-gradient(160deg, #0F2436 0%, #1D4A5C 55%, #2E6B6B 100%)'},
+  'pink-teal-gradient':{bg:'#B0637A',acc:'#F4C9D6',sec:'#2E4B4B',txt:'#FFF5F8',gradient:'linear-gradient(165deg, #1E3A3A 0%, #7A4A5C 55%, #C97B8C 100%)'},
+  'purple-dream-gradient':{bg:'#3A2B5C',acc:'#B48FE0',sec:'#E8D5F5',txt:'#F5EEFF',gradient:'linear-gradient(165deg, #E8D5F5 0%, #9B7BC4 50%, #3A2B5C 100%)'},
+  'black-white-gradient':{bg:'#1A1A1A',acc:'#FFFFFF',sec:'#8A8A8A',txt:'#F5F5F5',gradient:'linear-gradient(165deg, #000000 0%, #3A3A3A 50%, #FFFFFF 100%)'},
+  'crimson-rose-gradient':{bg:'#4A0E1A',acc:'#E8547A',sec:'#F5C2CE',txt:'#FFF0F3',gradient:'linear-gradient(165deg, #F5C2CE 0%, #C9435F 50%, #4A0E1A 100%)'},
+  'amber-honey-gradient':{bg:'#3D2B06',acc:'#E8A63C',sec:'#FFE8B8',txt:'#3D2B06',gradient:'linear-gradient(165deg, #FFE8B8 0%, #E0A83C 50%, #6B4A0E 100%)'},
+  'emerald-mint-gradient':{bg:'#0A2E1F',acc:'#3CBA7A',sec:'#B8F0D4',txt:'#F0FFF8',gradient:'linear-gradient(165deg, #B8F0D4 0%, #3C9E6E 50%, #0A2E1F 100%)'},
+  'sunset-orange-gradient':{bg:'#3D1806',acc:'#F2793C',sec:'#FFCFA0',txt:'#FFF5EC',gradient:'linear-gradient(165deg, #FFCFA0 0%, #E8672E 50%, #3D1806 100%)'},
+};
+
+// ---------- I18N ----------
+const I18N = {
+  en: {
+    apiKeyLabel:'Gemini API Key:', apiKeyPh:'AQ... (free — get one at aistudio.google.com/apikey)', apiKeyLink:'Get a free key →',
+    tabOffer:'Offer', tabAssets:'Assets', tabBrand:'Brand', tabPayment:'Payment',
+    stepTitles:['Your Offer','Ideal Buyer',"Their Problem",'Transformation',"What's Included",'Pricing','Brand & Tone'],
+    stepLabel:(n,t)=>`Step ${n} of ${totalSteps} — ${t}`,
+    hint1:'<b>Example:</b> "I sell digital templates for coaches who want to look professional online without hiring a designer."',
+    lbl1:"What's your offer?", ph1:'Describe your offer in 1-2 sentences...',
+    sugOffer:'✦ Help me write this', sugGeneric:'✦ Suggest for me',
+    hint2:'<b>Example:</b> "Busy freelancers who want to land higher-paying clients" or "New coaches who want a simple way to sell online without tech overwhelm"',
+    lbl2:"Who's your ideal buyer?", ph2:'Describe the person you want to sell to...',
+    hint3:'<b>Example:</b> "Doesn\'t know where to start, afraid to invest big, keeps wasting time on the wrong things"',
+    lbl3:"What's their biggest problem?", ph3:'List their pain points...',
+    hint4:'<b>Example:</b> "They\'ll launch their own online store within a week and land their first sale — even as a total beginner."',
+    lbl4:'What transformation do they get after?', ph4:'Their life AFTER using your offer...',
+    lbl5:"What's included in the offer? (one per line)", ph5:'1. PDF Playbook (47 pages)\n2. Canva Templates (50 designs)\n3. Video Tutorial (3 hrs)\n4. Private Community\n5. Bonus: 1:1 Call',
+    lblPrice:'Selling Price', phPrice:'e.g. 97 or $97',
+    lblOrigPrice:'Original Price (cross-out)', phOrigPrice:'e.g. 297 or $297',
+    lblGuarantee:'Guarantee (optional)',
+    lblBrand:'Brand Name', lblProduct:'Product Name', lblVideo:'Video URL (YouTube embed — optional)', lblTone:'Copywriting Tone',
+    btnBack:'← Back', btnNext:'Next →', btnGen:'✦ Generate My Sales Page',
+    secHero:'Hero Image and Logo', lblHero:'Hero Cover Image', uzHero:'Upload your hero image<br><span style="font-size:10px;">PNG / JPG — 1200×628px ideal</span>',
+    lblLogo:'Brand Logo', uzLogo:'Upload your logo<br><span style="font-size:10px;">PNG transparent preferred</span>',
+    secGallery:'Product Gallery Assets', pGallery:'Upload product images and name them — these get placed into the offer section of your sales page.', btnAddSlot:'+ Add product image',
+    secPalette:'Color Palette Presets', lblPalette:'Choose a preset palette', lblPreview:'Palette preview',
+    secCustom:'Custom Colors', clrBg:'Page Background', clrAcc:'Accent / Primary Color', clrSec:'Secondary / Gold Color', clrTxt:'Text / Headline Color',
+    secFont:'Font Pairing', lblFont:'Choose a font', secBtnStyle:'Button Style', lblBtnStyle:'CTA Button Style',
+    secPayment:'Universal Payment Gateway Router', pPayment:'Choose a payment method — this gets wired into every CTA button on your generated sales page.',
+    payPaypalDesc:'PayPal.me link or checkout URL', payStripeDesc:'Stripe payment link or checkout', payWiseDesc:'Wise payment link or account details',
+    paySystemeDesc:'Your Systeme.io checkout page URL', payGcashDesc:'Direct number or GCash link', payMayaDesc:'Maya payment link or QR URL',
+    payLinkDesc:'Any checkout URL', payDirectName:'Direct / Manual', payDirectDesc:'Shows instructions to the buyer as a popup',
+    phPayVal:'e.g. https://... or your number',
+    secBump:'Order Bump (Optional)', pBump:'An add-on offer shown before checkout — one-click upsell.',
+    lblBumpName:'Order Bump Name', phBumpName:'e.g. Template Pack Upgrade', lblBumpPrice:'Bump Price', phBumpPrice:'e.g. 27 or $27',
+    secFinal:'Final Step',
+    outReady:'Output — Canvas ready', outGenerating:'Generating...', outDone:'Sales page ready ✓', outError:'Error — try again',
+    btnCopy:'Copy HTML', btnCopied:'Copied! ✓', btnDl:'⬇ Download',
+    emptyTitle:'No preview yet', emptySub:'Add your Gemini API key above, fill out the Offer tab, upload your assets, pick your brand colors and payment method — then click "Generate."',
+    loadingTxt:'Building your sales page...', loadingSub:'Writing your full long-form copy — just a moment (30-60 sec)',
+    alertNoKey:'Add your Gemini API key above first. Get one free at aistudio.google.com/apikey',
+    alertNoOffer:'Fill out the Offer tab first — we need to know "What\'s your offer?"',
+    alertSuggestErr:'Something went wrong: ', alertGenErr:'Error while generating: ',
+    payToOrder:'To order:'
+  },
+  tl: {
+    apiKeyLabel:'Gemini API Key:', apiKeyPh:'AQ... (libre — kumuha sa aistudio.google.com/apikey)', apiKeyLink:'Kumuha ng free key →',
+    tabOffer:'Offer', tabAssets:'Assets', tabBrand:'Brand', tabPayment:'Payment',
+    stepTitles:['Offer Mo','Ideal Buyer','Problema','Transformation','Kasama sa Offer','Presyo','Brand & Tone'],
+    stepLabel:(n,t)=>`Hakbang ${n} ng ${totalSteps} — ${t}`,
+    hint1:'<b>Halimbawa:</b> "Nagbebenta ako ng digital template pack para sa mga coaches na gusto mag-look professional online kahit wala pang budget sa designer."',
+    lbl1:'Ano ang iyong offer?', ph1:'Ilarawan ang offer mo sa 1-2 pangungusap...',
+    sugOffer:'✦ Tulungan mo ako magsulat', sugGeneric:'✦ Suggest mo nga',
+    hint2:'<b>Halimbawa:</b> "Mga OFW na gusto mag-negosyo online habang nasa abroad" o "Mga nanay na may oras habang tulog ang bata at gusto kumita sa bahay"',
+    lbl2:'Sino ang iyong ideal buyer?', ph2:'Ilarawan ang taong gusto mong bumili...',
+    hint3:'<b>Halimbawa:</b> "Hindi alam kung saan magsisimula, takot mag-invest ng malaki, lagi nag-a-aksaya ng oras sa maling bagay"',
+    lbl3:'Ano ang pinakamalaking problema ng buyer mo?', ph3:'Ilista ang mga pain points nila...',
+    hint4:'<b>Halimbawa:</b> "Makakagawa sila ng sariling online store sa loob ng isang linggo at makakakuha ng unang benta agad kahit beginner pa lang"',
+    lbl4:'Ano ang transformation pagkatapos ng offer mo?', ph4:'Buhay nila AFTER na gamitin ang offer mo...',
+    lbl5:'Ano-ano ang kasama sa offer? (isa bawat linya)', ph5:'1. PDF Playbook (47 pages)\n2. Canva Templates (50 designs)\n3. Video Tutorial (3 hrs)\n4. Private Facebook Group\n5. Bonus: 1:1 Call',
+    lblPrice:'Selling Price', phPrice:'hal. 497 o ₱497',
+    lblOrigPrice:'Original Price (cross-out)', phOrigPrice:'hal. 1997 o ₱1,997',
+    lblGuarantee:'Guarantee (optional)',
+    lblBrand:'Brand Name', lblProduct:'Product Name', lblVideo:'Video URL (YouTube embed — optional)', lblTone:'Copywriting Tone',
+    btnBack:'← Bumalik', btnNext:'Susunod →', btnGen:'✦ I-generate ang Sales Page',
+    secHero:'Hero Image at Logo', lblHero:'Hero Cover Image', uzHero:'I-upload ang hero image<br><span style="font-size:10px;">PNG / JPG — 1200×628px ideal</span>',
+    lblLogo:'Brand Logo', uzLogo:'I-upload ang logo mo<br><span style="font-size:10px;">PNG transparent preferred</span>',
+    secGallery:'Product Gallery Assets', pGallery:'Mag-upload ng mga product images at bigyan ng pangalan — ia-inject ito sa offer section ng sales page.', btnAddSlot:'+ Magdagdag ng product image',
+    secPalette:'Color Palette Presets', lblPalette:'Pumili ng preset palette', lblPreview:'Preview ng palette',
+    secCustom:'Custom Colors', clrBg:'Background ng Page', clrAcc:'Accent / Primary Color', clrSec:'Secondary / Gold Color', clrTxt:'Text / Headline Color',
+    secFont:'Font Pairing', lblFont:'Pumili ng font', secBtnStyle:'Button Style', lblBtnStyle:'CTA Button Style',
+    secPayment:'Universal Payment Gateway Router', pPayment:'Piliin ang payment method — ia-inject ito sa lahat ng CTA buttons ng generated sales page mo.',
+    payPaypalDesc:'PayPal.me link o checkout URL', payStripeDesc:'Stripe payment link o checkout', payWiseDesc:'Wise payment link o account details',
+    paySystemeDesc:'Checkout page URL mo sa Systeme', payGcashDesc:'Direct number o GCash link', payMayaDesc:'Maya payment link o QR URL',
+    payLinkDesc:'Anumang checkout URL', payDirectName:'Direct / Manual', payDirectDesc:'Popup ng instructions sa buyer',
+    phPayVal:'hal. https://... o iyong number',
+    secBump:'Order Bump (Optional)', pBump:'Dagdag na offer bago mag-checkout — one-click add-on.',
+    lblBumpName:'Pangalan ng Order Bump', phBumpName:'hal. Template Pack Upgrade', lblBumpPrice:'Presyo ng Bump', phBumpPrice:'hal. 197 o ₱197',
+    secFinal:'Final Step',
+    outReady:'Output — Handa na ang canvas', outGenerating:'Nagge-generate...', outDone:'Sales page — handa na ✓', outError:'May error — subukan ulit',
+    btnCopy:'I-copy HTML', btnCopied:'Nakopya! ✓', btnDl:'⬇ I-download',
+    emptyTitle:'Walang preview pa', emptySub:'Ilagay ang Gemini API key sa taas, sagutan ang Offer tab, i-upload ang assets, piliin ang brand colors at payment — tapos i-click ang "I-generate".',
+    loadingTxt:'Ginagawa ang sales page mo...', loadingSub:'Nagsusulat ng buong long-form copy — sandali lang (30-60 sec)',
+    alertNoKey:'Ilagay muna ang Gemini API key sa taas. Libre kumuha sa aistudio.google.com/apikey',
+    alertNoOffer:'Sagutan muna ang Offer tab — kailangan ng "Ano ang offer mo?"',
+    alertSuggestErr:'May error: ', alertGenErr:'May error sa generation: ',
+    payToOrder:'Para mag-order:'
+  }
+};
+
+function t(key){ return I18N[currentLang][key]; }
+
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById('lang-en').classList.toggle('active', lang==='en');
+  document.getElementById('lang-tl').classList.toggle('active', lang==='tl');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if (I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-ph');
+    if (I18N[lang][key] !== undefined) el.placeholder = I18N[lang][key];
+  });
+  updateStepUI();
+  // refresh payment label for currently selected method
+  const labels = {
+    gcash:'payGcashDesc',paymongo:'payPaypalDesc',systeme:'paySystemeDesc',stripe:'payStripeDesc',
+    maya:'payMayaDesc',link:'payLinkDesc',direct:'payDirectDesc', paypal:'payPaypalDesc', wise:'payWiseDesc'
+  };
+  updatePayLabel(selectedPay);
+}
+
+function updatePayLabel(type) {
+  const nameMap = {
+    gcash:'GCash Number or Link', paypal:'PayPal.me Link', stripe:'Stripe Payment Link', wise:'Wise Payment Link / Details',
+    systeme:'Systeme.io Checkout URL', maya:'Maya Payment Link', link:'Custom Checkout URL', direct:'Payment Instructions'
+  };
+  const nameMapTl = {
+    gcash:'GCash Number o Link', paypal:'PayPal.me Link', stripe:'Stripe Payment Link', wise:'Wise Payment Link / Details',
+    systeme:'Systeme.io Checkout URL', maya:'Maya Payment Link', link:'Custom Checkout URL', direct:'GCash Number o Payment Instructions'
+  };
+  const map = currentLang==='en' ? nameMap : nameMapTl;
+  document.getElementById('pay-lbl').textContent = map[type] || 'Payment Info';
+}
+
+function switchTab(tb) {
+  document.querySelectorAll('.tab').forEach((b,i)=>{
+    b.classList.toggle('active',['offer','assets','brand','payment','funnel'][i]===tb);
+  });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tb).classList.add('active');
+}
+
+function buildDots() {
+  const c = document.getElementById('dots');
+  c.innerHTML = '';
+  for(let i=1;i<=totalSteps;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i<curStep?' done':i===curStep?' cur':'');
+    c.appendChild(d);
+  }
+}
+
+function updateStepUI() {
+  document.querySelectorAll('.fc-step').forEach(s=>s.classList.remove('active'));
+  const cur = document.querySelector(`.fc-step[data-s="${curStep}"]`);
+  if(cur) cur.classList.add('active');
+  const titles = I18N[currentLang].stepTitles;
+  document.getElementById('step-label').textContent = I18N[currentLang].stepLabel(curStep, titles[curStep-1]);
+  document.getElementById('progress').style.width = `${(curStep/totalSteps)*100}%`;
+  document.getElementById('btn-back').style.display = curStep>1?'block':'none';
+  document.getElementById('btn-next').style.display = curStep<totalSteps?'block':'none';
+  document.getElementById('btn-gen').style.display = curStep===totalSteps?'block':'none';
+  buildDots();
+}
+
+function nav(d) {
+  const n = curStep+d;
+  if(n<1||n>totalSteps) return;
+  curStep = n; updateStepUI();
+}
+
+function getApiKey() {
+  const k = document.getElementById('api-key').value.trim();
+  if(!k){ alert(t('alertNoKey')); return null; }
+  return k;
+}
+
+async function callAI(systemPrompt, userPrompt) {
+  const key = getApiKey();
+  if(!key) throw new Error('no key');
+
+  const models = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-flash-latest'
+  ];
+
+  let lastError = '';
+  for (const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: { maxOutputTokens: 32768, temperature: 0.9 }
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        lastError = `[${model}] ${data.error.message || JSON.stringify(data.error)}`;
+        continue;
+      }
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const finishReason = data.candidates?.[0]?.finishReason;
+      if (!content) {
+        lastError = `[${model}] No content in response: ${JSON.stringify(data).slice(0,200)}`;
+        continue;
+      }
+      if (finishReason === 'MAX_TOKENS') {
+        lastError = `[${model}] Response got cut off (MAX_TOKENS)`;
+        continue;
+      }
+      return content;
+    } catch (e) {
+      lastError = `[${model}] ${e.message}`;
+      continue;
+    }
+  }
+  throw new Error(lastError || 'All Gemini models are busy right now. Please try again shortly.');
+}
+
+async function suggest(field) {
+  const offer = document.getElementById('f-offer').value;
+  const buyer = document.getElementById('f-buyer').value;
+  const langInstruction = currentLang==='tl' ? 'Write in Taglish.' : 'Write in modern, conversational English.';
+  const maps = {
+    offer:`Suggest a short 1-2 sentence digital product offer description. ${langInstruction} Just give the suggestion directly, no preamble.`,
+    buyer:`Based on this offer: "${offer}" — who is the ideal buyer? ${langInstruction} 1-2 sentences. Just the answer, no preamble.`,
+    problem:`Based on offer "${offer}" for buyer "${buyer}" — what are the top problems the buyer has before this offer? ${langInstruction} Short bullet list. No preamble.`,
+    transform:`Based on offer "${offer}" — what transformation does the buyer get after? ${langInstruction} 2 sentences. Just the answer, no preamble.`
+  };
+  const ids = {offer:'f-offer',buyer:'f-buyer',problem:'f-problem',transform:'f-transform'};
+  const el = document.getElementById(ids[field]);
+  if(!el) return;
+  const btns = document.querySelectorAll('.sug-btn');
+  btns.forEach(b=>b.disabled=true);
+  el.value = currentLang==='tl' ? 'Nagsu-suggest...' : 'Thinking...';
+  try {
+    const result = await callAI('You are a helpful marketing assistant.', maps[field]);
+    el.value = result.trim();
+  } catch(e){ el.value=''; alert(t('alertSuggestErr')+e.message); }
+  btns.forEach(b=>b.disabled=false);
+}
+
+function uploadSingle(evt, zoneId, imgId, type) {
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const zone = document.getElementById(zoneId);
+    const img = document.getElementById(imgId);
+    img.src = e.target.result; img.style.display='block';
+    zone.classList.add('has-img');
+    if(type==='hero') heroB64 = e.target.result;
+    if(type==='logo') logoB64 = e.target.result;
+    if(type==='about') aboutB64 = e.target.result;
+    if(type==='payqr') payqrB64 = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addSlot() {
+  const idx = galleryItems.length;
+  galleryItems.push({src:'',name:''});
+  const wrap = document.createElement('div');
+  wrap.className = 'g-slot-wrap';
+  const uploadTxt = currentLang==='tl' ? 'Mag-upload' : 'Upload';
+  const namePh = currentLang==='tl' ? 'Pangalan ng item' : 'Item name';
+  wrap.innerHTML = `
+    <div class="g-slot" id="gs-${idx}">
+      <input type="file" accept="image/*" onchange="uploadGal(event,${idx})">
+      <img id="gi-${idx}" alt="">
+      <div class="g-slot-icon">🖼️</div>
+      <div class="g-slot-txt">${uploadTxt}</div>
+    </div>
+    <input class="g-name" id="gn-${idx}" placeholder="${namePh}" oninput="galleryItems[${idx}].name=this.value">
+  `;
+  document.getElementById('gallery-grid').appendChild(wrap);
+}
+
+function uploadGal(evt, idx) {
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    galleryItems[idx].src = e.target.result;
+    const slot = document.getElementById(`gs-${idx}`);
+    const img = document.getElementById(`gi-${idx}`);
+    img.src = e.target.result; img.style.display='block';
+    slot.classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+}
+
+function addProofBlock() {
+  const idx = proofItems.length;
+  proofItems.push({src:'', headline:'', desc:'', swap:false});
+  const wrap = document.createElement('div');
+  wrap.id = `proof-wrap-${idx}`;
+  wrap.style.cssText = 'border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:12px;';
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-size:12px;font-weight:700;color:var(--gold);">Proof Block ${idx + 1}</span>
+      <div style="display:flex;gap:6px;">
+        <button type="button" id="flip-btn-${idx}" onclick="toggleProofSwap(${idx})" title="Flip image/text side" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;color:var(--cream);cursor:pointer;font-size:12px;">⇄ Flip Side</button>
+        <button type="button" onclick="removeProofBlock(${idx})" style="background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.3);border-radius:6px;padding:4px 10px;color:#ff8080;cursor:pointer;font-size:12px;">✕ Remove</button>
+      </div>
+    </div>
+    <div class="g-slot" id="ps-${idx}" style="width:100%;height:140px;">
+      <input type="file" accept="image/*" onchange="uploadProofImg(event,${idx})">
+      <img id="pi-${idx}" alt="">
+      <div class="g-slot-icon">🖼️</div>
+      <div class="g-slot-txt">Upload</div>
+    </div>
+    <input type="text" placeholder="Headline (e.g. 'Real Student Result')" style="width:100%;margin-top:8px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:var(--cream);font-size:13px;" oninput="proofItems[${idx}].headline=this.value">
+    <textarea placeholder="Short description of what this proves..." style="width:100%;margin-top:8px;min-height:60px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:var(--cream);font-size:13px;" oninput="proofItems[${idx}].desc=this.value"></textarea>
+  `;
+  document.getElementById('proof-blocks').appendChild(wrap);
+}
+
+function uploadProofImg(evt, idx) {
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    proofItems[idx].src = e.target.result;
+    const slot = document.getElementById(`ps-${idx}`);
+    const img = document.getElementById(`pi-${idx}`);
+    img.src = e.target.result; img.style.display='block';
+    slot.classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+}
+
+function toggleProofSwap(idx) {
+  proofItems[idx].swap = !proofItems[idx].swap;
+  const btn = document.getElementById(`flip-btn-${idx}`);
+  if (proofItems[idx].swap) {
+    btn.style.background = 'var(--gold)';
+    btn.style.color = '#1a1a1a';
+    btn.style.borderColor = 'var(--gold)';
+    btn.textContent = '⇄ Flipped ✓';
+  } else {
+    btn.style.background = 'rgba(255,255,255,0.08)';
+    btn.style.color = 'var(--cream)';
+    btn.style.borderColor = 'rgba(255,255,255,0.15)';
+    btn.textContent = '⇄ Flip Side';
+  }
+}
+
+function removeProofBlock(idx) {
+  proofItems[idx] = null;
+  const el = document.getElementById(`proof-wrap-${idx}`);
+  if (el) el.remove();
+}
+
+function applyPreset() {
+  const key = document.getElementById('palette-sel').value;
+  const cc = document.getElementById('custom-colors');
+  cc.style.display = key==='custom'?'flex':'none';
+  const p = palettes[key]||palettes['midnight-gold'];
+  if(p){
+    document.getElementById('c-bg').value=p.bg;
+    document.getElementById('c-acc').value=p.acc;
+    document.getElementById('c-sec').value=p.sec;
+    document.getElementById('c-txt').value=p.txt;
+  }
+  updatePalPreview();
+}
+
+function updatePalPreview() {
+  const key = document.getElementById('palette-sel').value;
+  const p = key === 'custom' ? getColors() : (palettes[key]||palettes['midnight-gold']);
+  document.getElementById('pd-bg').style.background = p.gradient || document.getElementById('c-bg').value;
+  document.getElementById('pd-acc').style.background = document.getElementById('c-acc').value;
+  document.getElementById('pd-sec').style.background = document.getElementById('c-sec').value;
+  document.getElementById('pd-txt').style.background = document.getElementById('c-txt').value;
+}
+
+function selectPay(el, type) {
+  document.querySelectorAll('.pay-opt').forEach(o=>{
+    o.classList.remove('sel');
+    o.querySelector('.pay-check-inner').style.display='none';
+  });
+  el.classList.add('sel');
+  el.querySelector('.pay-check-inner').style.display='block';
+  selectedPay = type;
+  updatePayLabel(type);
+}
+
+function getColors() {
+  const key = document.getElementById('palette-sel').value;
+  if(key!=='custom') return palettes[key]||palettes['midnight-gold'];
+  const useGradient = document.getElementById('c-gradient-on').checked;
+  const bg = document.getElementById('c-bg').value;
+  const bgMid = document.getElementById('c-bg-mid').value;
+  const bg2 = document.getElementById('c-bg2').value;
+  return {
+    bg,
+    acc:document.getElementById('c-acc').value,
+    sec:document.getElementById('c-sec').value,
+    txt:document.getElementById('c-txt').value,
+    gradient: useGradient ? `linear-gradient(165deg, ${bg} 0%, ${bgMid} 50%, ${bg2} 100%)` : undefined
+  };
+}
+
+function toggleCustomGradient() {
+  const on = document.getElementById('c-gradient-on').checked;
+  document.getElementById('c-gradient-mid-row').style.display = on ? 'flex' : 'none';
+  document.getElementById('c-gradient-end-row').style.display = on ? 'flex' : 'none';
+  updatePalPreview();
+}
+
+function fcToggleUpsellPayFields() {
+  const isManual = document.getElementById('f-upsell-paymethod').value === 'manual';
+  document.getElementById('f-upsell-link-wrap').style.display = isManual ? 'none' : 'block';
+  document.getElementById('f-upsell-manual-wrap').style.display = isManual ? 'block' : 'none';
+  document.getElementById('f-upsell-manual-wrap2').style.display = isManual ? 'block' : 'none';
+  document.getElementById('f-upsell-manual-wrap3').style.display = isManual ? 'block' : 'none';
+  document.getElementById('f-upsell-manual-wrap4').style.display = isManual ? 'block' : 'none';
+  document.getElementById('f-upsell-manual-wrap5').style.display = isManual ? 'block' : 'none';
+}
+
+function buildFunnelBundle(salesDoc, cfg) {
+  const c = cfg.colors;
+  const headMatch = salesDoc.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  const bodyMatch = salesDoc.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  const headInner = (headMatch ? headMatch[1] : `<meta charset="UTF-8">`) + (cfg.trackingHTML || '');
+  const salesBodyInner = bodyMatch ? bodyMatch[1] : salesDoc;
+
+  const pageOrder = [];
+  if (cfg.optinOn) pageOrder.push('optin');
+  pageOrder.push('sales');
+  if (cfg.upsellOn) pageOrder.push('upsell');
+  if (cfg.downsellOn) pageOrder.push('downsell');
+  if (cfg.thankyouOn) pageOrder.push('thankyou');
+  if (cfg.aboutOn) pageOrder.push('about');
+  if (cfg.servicesOn) pageOrder.push('services');
+  if (cfg.faqOn) pageOrder.push('faq');
+  if (cfg.contactOn) pageOrder.push('contact');
+
+  const infoPages = [
+    cfg.aboutOn && 'about', cfg.servicesOn && 'services', cfg.faqOn && 'faq', cfg.contactOn && 'contact'
+  ].filter(Boolean);
+  const infoLabels = { about: 'About', services: 'Services', faq: 'FAQ', contact: 'Contact' };
+  const infoNav = infoPages.length ? `
+    <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;font-size:13px;">
+      <a href="#sales" style="color:${c.txt};opacity:.6;text-decoration:none;">Home</a>
+      ${infoPages.map(p => `<a href="#${p}" style="color:${c.txt};opacity:.6;text-decoration:none;">${infoLabels[p]}</a>`).join('')}
+    </div>` : '';
+
+  // Real sticky top navbar shown on every page — Home always jumps back to the sales page
+  const topNavBar = infoPages.length ? `
+<div style="position:sticky;top:0;z-index:999;background:${c.bg};border-bottom:1px solid rgba(255,255,255,0.08);">
+  <div style="max-width:1000px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 24px;">
+    <a href="#sales" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      ${logoB64 ? `<img src="${logoB64}" alt="logo" style="height:32px;object-fit:contain;">` : `<span style="font-weight:700;color:${c.txt};font-size:16px;">${cfg.brand}</span>`}
+    </a>
+    <div style="display:flex;gap:22px;flex-wrap:wrap;font-size:13px;">
+      <a href="#sales" style="color:${c.txt};opacity:.75;text-decoration:none;">Home</a>
+      ${infoPages.map(p => `<a href="#${p}" style="color:${c.txt};opacity:.75;text-decoration:none;">${infoLabels[p]}</a>`).join('')}
+    </div>
+  </div>
+</div>` : '';
+
+  const optinSection = cfg.optinOn ? `
+<div id="fc-page-optin" class="fc-page" data-display="flex" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:520px;width:100%;text-align:center;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${c.sec};margin-bottom:14px;">Free — ${cfg.optinMagnet}</div>
+    <h1 style="font-size:clamp(28px,5vw,42px);line-height:1.15;margin-bottom:16px;">${cfg.optinHeadline}</h1>
+    <p style="color:${c.txt};opacity:.75;margin-bottom:28px;">Enter your email below and get instant access.</p>
+    ${cfg.optinEmbed ? cfg.optinEmbed : `
+    <form onsubmit="event.preventDefault();window.location.hash='sales';" style="display:flex;flex-direction:column;gap:12px;">
+      <input required type="email" placeholder="Your best email" style="padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:${c.txt};font-size:15px;">
+      <button type="submit" style="padding:15px 20px;border-radius:8px;border:none;background:${c.acc};color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Send Me the ${cfg.optinMagnet} →</button>
+    </form>`}
+  </div>
+</div>` : '';
+
+  const upsellIsManual = cfg.upsellPayMethod === 'manual';
+  function fcBuildMessengerLink(raw) {
+    if (!raw) return '#';
+    let v = raw.trim().replace(/^@/, '');
+    if (/^https?:\/\//i.test(v)) return v;
+    if (/^(m\.me|www\.messenger\.com|messenger\.com)\//i.test(v)) return `https://${v}`;
+    // Just a page username was pasted
+    return `https://m.me/${v.replace(/^\/+/, '')}`;
+  }
+  function fcNormalizeUrl(raw, platformDomain) {
+    if (!raw) return '';
+    let v = raw.trim().replace(/^@/, '');
+    if (/^https?:\/\//i.test(v)) return v;
+    if (v.includes('.')) return `https://${v.replace(/^\/+/, '')}`;
+    // Bare handle with no domain (e.g. "myhandle") — prepend the platform's domain
+    return `https://${platformDomain}/${v.replace(/^\/+/, '')}`;
+  }
+  const socialIcons = [
+    { key: 'socialFacebook', label: 'Facebook', domain: 'facebook.com', svg: '<path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/>' },
+    { key: 'socialInstagram', label: 'Instagram', domain: 'instagram.com', svg: '<rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.2"/>' },
+    { key: 'socialTiktok', label: 'TikTok', domain: 'tiktok.com', svg: '<path d="M16.5 3c.3 2.1 1.9 3.7 4 4v3c-1.5 0-2.9-.5-4-1.3v6.8c0 3.6-2.9 6.5-6.5 6.5S3.5 19.1 3.5 15.5 6.4 9 10 9c.4 0 .8 0 1.2.1v3.2c-.4-.1-.8-.2-1.2-.2-1.9 0-3.5 1.6-3.5 3.5S8.1 19 10 19s3.5-1.6 3.5-3.5V3h3z"/>' },
+    { key: 'socialYoutube', label: 'YouTube', domain: 'youtube.com', svg: '<path d="M22 12s0-3.2-.4-4.7c-.2-.9-.9-1.6-1.8-1.8C18.3 5 12 5 12 5s-6.3 0-7.8.5c-.9.2-1.6.9-1.8 1.8C2 8.8 2 12 2 12s0 3.2.4 4.7c.2.9.9 1.6 1.8 1.8C5.7 19 12 19 12 19s6.3 0 7.8-.5c.9-.2 1.6-.9 1.8-1.8.4-1.5.4-4.7.4-4.7zM10 15V9l5.2 3-5.2 3z"/>' }
+  ];
+  const socialIconsHTML = socialIcons.some(s => cfg[s.key]) ? `
+    <div style="display:flex;gap:14px;justify-content:center;margin-top:20px;">
+      ${socialIcons.filter(s => cfg[s.key]).map(s => `<a href="${fcNormalizeUrl(cfg[s.key], s.domain)}" target="_blank" rel="noopener" aria-label="${s.label}" style="display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.1);color:${c.txt};text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">${s.svg}</svg></a>`).join('')}
+    </div>` : '';
+  const messengerLink = fcBuildMessengerLink(cfg.upsellProofContact);
+  const defaultInstructions = `After sending ${cfg.upsellPrice}, click below to send your payment screenshot — access is sent once confirmed.`;
+  const upsellInstructionsText = (cfg.upsellInstructions || defaultInstructions).replace(/</g, '&lt;');
+  const upsellManualBlock = `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:20px;margin-bottom:20px;text-align:left;">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${c.sec};margin-bottom:12px;">Manual Payment — GCash / Maya</div>
+      ${cfg.upsellGcash ? `<p style="margin:6px 0;"><strong>GCash:</strong> ${cfg.upsellGcash}</p>` : ''}
+      ${cfg.upsellMaya ? `<p style="margin:6px 0;"><strong>Maya:</strong> ${cfg.upsellMaya}</p>` : ''}
+      ${cfg.upsellAcctName ? `<p style="margin:6px 0;"><strong>Account Name:</strong> ${cfg.upsellAcctName}</p>` : ''}
+      <p style="margin:14px 0 0;opacity:.8;font-size:14px;white-space:pre-line;">${upsellInstructionsText}</p>
+    </div>
+    <a href="${messengerLink}" target="_blank" rel="noopener" style="display:inline-block;padding:16px 32px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;font-size:16px;margin-bottom:14px;">Send My Payment Proof →</a><br>`;
+  const upsellLinkBlock = `<a href="${cfg.upsellPayVal || '#thankyou'}" style="display:inline-block;padding:16px 32px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;font-size:16px;margin-bottom:14px;">Yes! Add ${cfg.upsellName} →</a><br>`;
+
+  const upsellSection = cfg.upsellOn ? `
+<div id="fc-page-upsell" class="fc-page" data-display="flex" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:560px;width:100%;text-align:center;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${c.sec};margin-bottom:14px;">⚡ Wait — One-Time Offer</div>
+    <h1 style="font-size:clamp(26px,4.5vw,38px);line-height:1.2;margin-bottom:16px;">Add ${cfg.upsellName} for just ${cfg.upsellPrice}</h1>
+    <p style="opacity:.75;margin-bottom:28px;">This offer disappears once you leave this page.</p>
+    ${upsellIsManual ? upsellManualBlock : upsellLinkBlock}
+    <a href="${cfg.downsellOn ? '#downsell' : '#thankyou'}" style="color:${c.txt};opacity:.5;font-size:13px;text-decoration:underline;">No thanks, take me to my order</a>
+  </div>
+</div>` : '';
+
+  const downsellSection = cfg.downsellOn ? `
+<div id="fc-page-downsell" class="fc-page" data-display="flex" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:560px;width:100%;text-align:center;">
+    <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${c.sec};margin-bottom:14px;">One Last Thing...</div>
+    <h1 style="font-size:clamp(26px,4.5vw,38px);line-height:1.2;margin-bottom:16px;">How about ${cfg.downsellName} for just ${cfg.downsellPrice} instead?</h1>
+    <p style="opacity:.75;margin-bottom:28px;">A smaller way to get started — no pressure either way.</p>
+    <a href="${cfg.downsellPayVal || '#thankyou'}" style="display:inline-block;padding:16px 32px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;font-size:16px;margin-bottom:14px;">Yes, Add ${cfg.downsellName} →</a><br>
+    <a href="#thankyou" style="color:${c.txt};opacity:.5;font-size:13px;text-decoration:underline;">No thanks, take me to my order</a>
+  </div>
+</div>` : '';
+
+  const thankyouSection = cfg.thankyouOn ? `
+<div id="fc-page-thankyou" class="fc-page" data-display="flex" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:560px;width:100%;text-align:center;">
+    <div style="font-size:40px;margin-bottom:14px;">✅</div>
+    <h1 style="font-size:clamp(26px,4.5vw,36px);margin-bottom:20px;">You're all set!</h1>
+    <div style="text-align:left;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px 28px;margin-bottom:24px;opacity:.9;line-height:1.8;white-space:pre-line;font-size:15px;">${cfg.thankyouDelivery}</div>
+    ${cfg.thankyouLink ? `<a href="${cfg.thankyouLink}" style="display:inline-block;padding:15px 30px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;">Access It Now →</a>` : ''}
+  </div>
+</div>` : '';
+
+  const aboutSection = cfg.aboutOn ? `
+<div id="fc-page-about" class="fc-page" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};">
+  ${topNavBar}
+  <div style="max-width:680px;margin:0 auto;padding:60px 24px;">
+    <h1 style="font-size:clamp(28px,5vw,40px);margin-bottom:24px;">About Us</h1>
+    ${aboutB64 ? `<img src="${aboutB64}" alt="About us" style="width:160px;height:160px;object-fit:cover;border-radius:50%;margin-bottom:24px;display:block;">` : ''}
+    <p style="opacity:.85;line-height:1.8;font-size:16px;white-space:pre-line;">${cfg.aboutText.replace(/</g, '&lt;')}</p>
+  </div>
+</div>` : '';
+
+  const servicesItems = (cfg.servicesList || '').split('\n').map(s => s.trim()).filter(Boolean);
+  const servicesSection = cfg.servicesOn ? `
+<div id="fc-page-services" class="fc-page" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};">
+  ${topNavBar}
+  <div style="max-width:680px;margin:0 auto;padding:60px 24px;">
+    <h1 style="font-size:clamp(28px,5vw,40px);margin-bottom:28px;">Services &amp; Products</h1>
+    ${servicesItems.map(s => `<div style="padding:16px 20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:12px;font-size:15px;">${s.replace(/</g, '&lt;')}</div>`).join('')}
+  </div>
+</div>` : '';
+
+  // Parse FAQ entries robustly: detect format based on whether blank lines are used to separate entries
+  const faqRaw = (cfg.faqList || '').trim();
+  let faqPairs = [];
+  if (/\n\s*\n/.test(faqRaw)) {
+    // Blank-line-separated blocks (supports multi-line answers)
+    faqPairs = faqRaw
+      .split(/\n\s*\n/)
+      .map(block => {
+        const idx = block.indexOf('|');
+        if (idx === -1) return null;
+        return [block.slice(0, idx).trim(), block.slice(idx + 1).trim()];
+      })
+      .filter(Boolean);
+  } else {
+    // Simple one-line-per-entry format
+    faqPairs = faqRaw.split('\n').map(l => l.split('|')).filter(p => p.length >= 2).map(p => [p[0], p.slice(1).join('|')]);
+  }
+  const faqSection = cfg.faqOn ? `
+<div id="fc-page-faq" class="fc-page" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};">
+  ${topNavBar}
+  <div style="max-width:680px;margin:0 auto;padding:60px 24px;">
+    <h1 style="font-size:clamp(28px,5vw,40px);margin-bottom:28px;">Frequently Asked Questions</h1>
+    ${faqPairs.length
+      ? faqPairs.map(([q, a]) => `<div style="margin-bottom:22px;"><div style="font-weight:700;margin-bottom:6px;">${(q||'').trim().replace(/</g, '&lt;')}</div><div style="opacity:.75;line-height:1.6;white-space:pre-line;">${(a||'').trim().replace(/</g, '&lt;')}</div></div>`).join('')
+      : `<div style="opacity:.75;line-height:1.8;white-space:pre-line;">${faqRaw.replace(/</g, '&lt;')}</div>`}
+  </div>
+</div>` : '';
+
+  const contactSection = cfg.contactOn ? `
+<div id="fc-page-contact" class="fc-page" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};">
+  ${topNavBar}
+  <div style="max-width:520px;margin:0 auto;padding:60px 24px;text-align:center;">
+    <h1 style="font-size:clamp(28px,5vw,40px);margin-bottom:24px;">Get In Touch</h1>
+    ${cfg.contactEmail ? `<p style="margin:8px 0;font-size:15px;"><strong>Email:</strong> <a href="mailto:${cfg.contactEmail}" style="color:${c.txt};text-decoration:underline;">${cfg.contactEmail}</a></p>` : ''}
+    ${cfg.contactMessenger ? `<p style="margin:8px 0;font-size:15px;"><strong>Messenger:</strong> <a href="${fcBuildMessengerLink(cfg.contactMessenger)}" target="_blank" rel="noopener" style="color:${c.txt};text-decoration:underline;">Message us</a></p>` : ''}
+    ${socialIconsHTML}
+  </div>
+</div>` : '';
+
+  const routerScript = `
+<script>
+(function(){
+  var order = ${JSON.stringify(pageOrder)};
+  function showPage(){
+    var hash = (location.hash || '').replace('#','');
+    if (order.indexOf(hash) === -1) hash = order[0];
+    order.forEach(function(p){
+      var el = document.getElementById('fc-page-'+p);
+      if (el) el.style.display = (p === hash) ? (el.getAttribute('data-display') || 'block') : 'none';
+    });
+    if (hash === 'thankyou' && !window.__fcPurchaseFired && typeof fcTrackEvent === 'function') {
+      window.__fcPurchaseFired = true;
+      fcTrackEvent('Purchase');
+    }
+  }
+  window.addEventListener('hashchange', showPage);
+  window.addEventListener('DOMContentLoaded', showPage);
+  showPage();
+})();
+<\/script>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+${headInner}
+</head>
+<body style="margin:0;">
+${optinSection}
+<div id="fc-page-sales" class="fc-page" style="display:none;">
+${topNavBar}
+${salesBodyInner}
+${infoPages.length ? `
+<div style="text-align:center;padding:24px;background:rgba(0,0,0,0.15);">
+  <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;font-size:13px;">
+    ${infoPages.map(p => `<a href="#${p}" style="color:${c.txt};opacity:.65;text-decoration:none;">${infoLabels[p]}</a>`).join('')}
+  </div>
+</div>` : ''}
+</div>
+${upsellSection}
+${downsellSection}
+${thankyouSection}
+${aboutSection}
+${servicesSection}
+${faqSection}
+${contactSection}
+${routerScript}
+</body>
+</html>`;
+}
+
+function fcBuildGalleryHTML(items) {
+  const n = items.length;
+  if (!n) return '';
+  // Balance rows evenly (e.g. 11 items -> 4/4/3, not 5/5/1) capped at 5 columns
+  const rows = Math.max(1, Math.ceil(n / 5));
+  const cols = Math.ceil(n / rows);
+  let rowsHTML = '';
+  for (let i = 0; i < n; i += cols) {
+    const row = items.slice(i, i + cols);
+    rowsHTML += `<div style="display:flex;justify-content:center;gap:16px;margin-bottom:16px;">${
+      row.map((g, j) => {
+        const idx = i + j;
+        return `<div style="flex:1 1 0;max-width:240px;text-align:center;"><img src="__GALLERY_IMG_${idx}__" alt="${g.name}" style="width:100%;display:block;border-radius:10px;border:1px solid rgba(255,255,255,0.08);"><div style="font-size:13px;font-weight:600;margin-top:8px;">${g.name}</div></div>`;
+      }).join('')
+    }</div>`;
+  }
+  return `<div style="margin:24px 0;">${rowsHTML}</div>`;
+}
+
+async function generate() {
+  if(!getApiKey()) return;
+
+  const offer = document.getElementById('f-offer').value.trim();
+  const buyer = document.getElementById('f-buyer').value.trim();
+  const problem = document.getElementById('f-problem').value.trim();
+  const transform = document.getElementById('f-transform').value.trim();
+  const includes = document.getElementById('f-includes').value.trim();
+  const price = document.getElementById('f-price').value.trim()||'97';
+  const origPrice = document.getElementById('f-origprice').value.trim()||'297';
+  const guarantee = document.getElementById('f-guarantee').value.trim()||'30-day money back guarantee';
+  const deadline = document.getElementById('f-deadline').value.trim();
+  const brand = document.getElementById('f-brand').value.trim()||'Digitera Levi';
+  const product = document.getElementById('f-product').value.trim()||'FunnelCraft';
+  const video = document.getElementById('f-video').value.trim();
+  const tone = document.getElementById('f-tone').value;
+  const payVal = document.getElementById('pay-val').value.trim();
+  const bumpName = document.getElementById('bump-name').value.trim();
+  const bumpPrice = document.getElementById('bump-price').value.trim();
+  const bonusesList = document.getElementById('f-bonuses-list').value.trim();
+  const exitOn = document.getElementById('f-exit-on').checked;
+  const exitHeadline = document.getElementById('f-exit-headline').value.trim() || "Wait! Don't Miss This...";
+  const exitOffer = document.getElementById('f-exit-offer').value.trim();
+  const couponCode = document.getElementById('f-coupon-code').value.trim();
+  const couponMessage = document.getElementById('f-coupon-message').value.trim();
+  const ogImageUrl = document.getElementById('f-og-image').value.trim();
+  const bumpBundleLink = document.getElementById('bump-bundle-link').value.trim();
+  const checkoutFormOn = document.getElementById('f-checkout-form-on').checked;
+  const colors = getColors();
+  const font = document.getElementById('font-sel').value;
+  const btnStyle = document.getElementById('btn-style').value;
+  const fcExtractId = (raw, patterns) => {
+    if (!raw) return '';
+    for (const p of patterns) {
+      const m = raw.match(p);
+      if (m) return m[1];
+    }
+    return raw.trim(); // fallback: assume they pasted just the ID
+  };
+  let metaPixel = document.getElementById('f-metapixel').value.trim();
+  metaPixel = fcExtractId(metaPixel, [/fbq\(\s*['"]init['"]\s*,\s*['"](\d+)['"]/, /(\d{10,20})/]);
+  let ga4Id = document.getElementById('f-ga4').value.trim();
+  ga4Id = fcExtractId(ga4Id, [/(G-[A-Z0-9]+)/i]);
+  let tiktokPixel = document.getElementById('f-tiktokpixel').value.trim();
+  tiktokPixel = fcExtractId(tiktokPixel, [/ttq\.load\(\s*['"]([A-Z0-9]+)['"]/i, /([A-Z0-9]{15,25})/i]);
+  const legalOn = document.getElementById('f-legal-toggle').checked;
+  const legalBiz = document.getElementById('f-legal-biz').value.trim() || document.getElementById('f-brand').value.trim() || 'Digitera Levi';
+  const legalEmail = document.getElementById('f-legal-email').value.trim() || 'support@example.com';
+
+  const optinOn = document.getElementById('f-optin-on').checked;
+  const optinMagnet = document.getElementById('f-optin-magnet').value.trim() || 'Free Guide';
+  const optinHeadline = document.getElementById('f-optin-headline').value.trim() || `Get instant access to the ${optinMagnet}`;
+  let optinEmbed = document.getElementById('f-optin-embed').value.trim();
+  if (optinEmbed) optinEmbed = optinEmbed.split('__FC_SOURCE__').join(product.replace(/'/g, "\\'"));
+  const upsellOn = document.getElementById('f-upsell-on').checked;
+  const upsellName = document.getElementById('f-upsell-name').value.trim() || 'Special Add-On';
+  const upsellPrice = document.getElementById('f-upsell-price').value.trim() || '47';
+  const upsellPayVal = document.getElementById('f-upsell-payval').value.trim();
+  const upsellPayMethod = document.getElementById('f-upsell-paymethod').value;
+  const upsellGcash = document.getElementById('f-upsell-gcash').value.trim();
+  const upsellMaya = document.getElementById('f-upsell-maya').value.trim();
+  const upsellAcctName = document.getElementById('f-upsell-acctname').value.trim();
+  const upsellProofContact = document.getElementById('f-upsell-proof-contact').value.trim();
+  const upsellInstructions = document.getElementById('f-upsell-instructions').value.trim();
+  const downsellOn = document.getElementById('f-downsell-on').checked;
+  const downsellName = document.getElementById('f-downsell-name').value.trim() || 'Starter Option';
+  const downsellPrice = document.getElementById('f-downsell-price').value.trim() || '19';
+  const downsellPayVal = document.getElementById('f-downsell-payval').value.trim();
+  const thankyouOn = document.getElementById('f-thankyou-on').checked;
+  const thankyouDelivery = document.getElementById('f-thankyou-delivery').value.trim() || 'Check your email for access details.';
+  const thankyouLink = document.getElementById('f-thankyou-link').value.trim();
+
+  const aboutOn = document.getElementById('f-about-on').checked;
+  const aboutText = document.getElementById('f-about-text').value.trim() || 'We\'re passionate about helping our customers succeed.';
+  const servicesOn = document.getElementById('f-services-on').checked;
+  const servicesList = document.getElementById('f-services-list').value.trim();
+  const faqOn = document.getElementById('f-faq-on').checked;
+  const faqList = document.getElementById('f-faq-list').value.trim();
+  const contactOn = document.getElementById('f-contact-on').checked;
+  const contactEmail = document.getElementById('f-contact-email').value.trim();
+  const contactMessenger = document.getElementById('f-contact-messenger').value.trim();
+  const socialFacebook = document.getElementById('f-social-facebook').value.trim();
+  const socialInstagram = document.getElementById('f-social-instagram').value.trim();
+  const socialTiktok = document.getElementById('f-social-tiktok').value.trim();
+  const socialYoutube = document.getElementById('f-social-youtube').value.trim();
+
+  if(!offer){ alert(t('alertNoOffer')); switchTab('offer'); return; }
+
+  const toneMap = {
+    'english-modern':'Modern, conversational English — like a knowledgeable friend explaining things simply, warm but persuasive. Even though the voice is friendly and relatable, the structure underneath should still be conversion-focused: real urgency, clear value stacking, and a strong close — never let "friendly" mean "soft" on the sell.',
+    'english-bold':'Bold, high-energy English — strong voice, punchy short sentences, attention-grabbing',
+    'english-pro':'Professional, authoritative English — expert-coach tone, credible and polished',
+    'english-dr':'Classic English direct-response style — Gary Halbert / Russell Brunson inspired, punchy and conversion-focused',
+    'taglish-friendly':'Taglish na friendly at conversational — parang kaibigan nakikipag-usap, warm pero persuasive',
+    'taglish-bold':'Taglish na bold at high-energy — malakas ang voice, maraming exclamation, pumupukaw',
+    'taglish-pro':'Taglish na professional at credible — may authority at expertise, parang expert coach'
+  };
+
+  const fontLinks = {
+    'inter-playfair':'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap',
+    'poppins':'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap',
+    'dm-sans':'https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800&display=swap',
+    'lora-inter':'https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap'
+  };
+
+  // Use lightweight placeholder tags instead of base64 in the prompt (avoids token overflow).
+  // Real images get swapped in AFTER the AI responds.
+  const logoHTML = logoB64
+    ? `<img src="__LOGO_IMG__" alt="${brand} logo" style="height:44px;object-fit:contain;">`
+    : `<span style="font-family:serif;font-size:22px;font-weight:900;">${brand}</span>`;
+
+  const heroImgHTML = heroB64
+    ? `<img src="__HERO_IMG__" alt="${product}" style="width:100%;max-width:820px;border-radius:14px;margin:28px auto 0;display:block;">`
+    : '';
+
+  const videoHTML = video
+    ? `<div style="max-width:760px;margin:40px auto;aspect-ratio:16/9;border-radius:12px;overflow:hidden;"><iframe src="${video}" style="width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe></div>`
+    : '';
+
+  const galleryFiltered = galleryItems.filter(g=>g.src);
+  const galleryHTML = fcBuildGalleryHTML(galleryFiltered);
+
+  const proofFiltered = proofItems.filter(p => p && p.src && (p.headline || p.desc));
+
+  // Compute live total (base price + bump price), preserving the base price's currency symbol/prefix
+  const fcParsePriceGen = (str) => {
+    const m = String(str).match(/^([^\d]*)([\d,]+\.?\d*)/);
+    if (!m) return { prefix: '', num: 0 };
+    return { prefix: m[1], num: parseFloat(m[2].replace(/,/g, '')) || 0 };
+  };
+
+  const proofHTML = proofFiltered.length ? proofFiltered.map((p, i) => {
+    // Default alternation: block 0 = image right, block 1 = image left, block 2 = image right, etc.
+    // A manual "swap" flips that specific block's default.
+    const imageOnRight = (i % 2 === 0) !== p.swap;
+    const imgDiv = `<div style="flex:1 1 280px;min-width:0;"><img src="__PROOF_IMG_${i}__" alt="${(p.headline||'').replace(/"/g,'&quot;')}" style="width:100%;border-radius:12px;display:block;"></div>`;
+    const textDiv = `<div style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;justify-content:center;">${p.headline ? `<h3 style="font-size:20px;margin-bottom:10px;">${p.headline.replace(/</g,'&lt;')}</h3>` : ''}${p.desc ? `<p style="opacity:.8;line-height:1.6;">${p.desc.replace(/</g,'&lt;')}</p>` : ''}</div>`;
+    return `<div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;margin:32px 0;">${imageOnRight ? textDiv + imgDiv : imgDiv + textDiv}</div>`;
+  }).join('') : '';
+
+  // Real countdown timer — only shows if a genuine deadline date was provided (no fake numbers)
+  const countdownHTML = deadline ? `
+<div style="max-width:420px;margin:28px auto;padding:18px 24px;border-radius:12px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);text-align:center;">
+  <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-bottom:8px;">Offer Ends In</div>
+  <div id="fc-countdown" style="font-size:26px;font-weight:800;letter-spacing:1px;">--:--:--:--</div>
+</div>
+<script>
+(function(){
+  var deadline = new Date(${JSON.stringify(deadline)}).getTime();
+  function tick(){
+    var el = document.getElementById('fc-countdown');
+    if (!el) return;
+    var diff = deadline - Date.now();
+    if (diff <= 0) { el.textContent = 'Offer has ended'; return; }
+    var d = Math.floor(diff / 86400000);
+    var h = Math.floor((diff % 86400000) / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var s = Math.floor((diff % 60000) / 1000);
+    el.textContent = d + 'd ' + String(h).padStart(2,'0') + 'h ' + String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
+    requestAnimationFrame(function(){ setTimeout(tick, 1000); });
+  }
+  tick();
+})();
+<\/script>` : '';
+
+  // Universal "Potential Revenue" calculator — works for any niche since it just multiplies the real price by a sales slider
+  const calcPriceParsed = fcParsePriceGen(price);
+  const calcHTML = calcPriceParsed.num > 0 ? `
+<div style="max-width:480px;margin:40px auto;padding:28px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);text-align:center;">
+  <h3 style="font-size:20px;margin-bottom:6px;">See Your Potential</h3>
+  <p style="opacity:.75;font-size:14px;margin-bottom:18px;">If you sold <strong id="fc-calc-count">5</strong> per month at ${price} each...</p>
+  <input type="range" id="fc-calc-slider" min="1" max="30" value="5" style="width:100%;" oninput="fcUpdateCalc()">
+  <div style="font-size:34px;font-weight:800;margin-top:16px;">${calcPriceParsed.prefix}<span id="fc-calc-result">0</span>/month</div>
+</div>
+<script>
+function fcUpdateCalc(){
+  var slider = document.getElementById('fc-calc-slider');
+  var count = parseInt(slider.value, 10);
+  document.getElementById('fc-calc-count').textContent = count;
+  document.getElementById('fc-calc-result').textContent = (count * ${calcPriceParsed.num}).toLocaleString();
+}
+fcUpdateCalc();
+<\/script>` : '';
+
+  // Extract the Google Sheets Apps Script URL from the opt-in embed (reused for checkout-form capture)
+  const appsScriptUrlMatch = optinEmbed.match(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec/);
+  const appsScriptUrl = appsScriptUrlMatch ? appsScriptUrlMatch[0] : '';
+
+  const bumpLabel = tone.startsWith('english')
+    ? { tag:'⚡ Special One-Time Offer', yes:`YES! Add "${bumpName}" too`, sub:`Just ${bumpPrice} — this is a one-time offer.` }
+    : { tag:'⚡ Special One-Time Offer', yes:`OO! Idagdag din ang "${bumpName}"`, sub:`Para lang sa ${bumpPrice} — isang beses na alok ito.` };
+
+  // Compute live total (base price + bump price), preserving the base price's currency symbol/prefix
+  const basePriceParsed = fcParsePriceGen(price);
+  const bumpPriceParsed = fcParsePriceGen(bumpPrice);
+  const totalWithBump = basePriceParsed.num + bumpPriceParsed.num;
+  const totalDisplay = `${basePriceParsed.prefix}${totalWithBump.toLocaleString()}`;
+
+  const bumpHTML = bumpName
+    ? `<div style="border:2px solid ${colors.sec};border-radius:12px;padding:20px 24px;margin:24px 0;background:rgba(255,255,255,0.03);">
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${colors.sec};margin-bottom:10px;">${bumpLabel.tag}</p>
+        <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+          <input type="checkbox" id="fc-bump-checkbox" style="margin-top:3px;accent-color:${colors.acc};" onchange="fcUpdateTotal()">
+          <div><strong style="font-size:15px;color:${colors.sec};">${bumpLabel.yes}</strong><br><span style="font-size:13px;color:rgba(255,255,255,0.7);">${bumpLabel.sub}</span></div>
+        </label>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);font-size:18px;font-weight:700;color:#fff;">
+          Total: <span id="fc-total-display">${price}</span>
+        </div>
+      </div>`
+    : '';
+
+  const checkoutFormHTML = checkoutFormOn
+    ? `<div style="max-width:420px;margin:20px auto;display:flex;flex-direction:column;gap:10px;">
+        <input type="text" id="fc-checkout-name" placeholder="${tone.startsWith('english') ? 'Full Name' : 'Buong Pangalan'}" style="padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:inherit;font-size:15px;">
+        <input type="email" id="fc-checkout-email" placeholder="${tone.startsWith('english') ? 'Email Address' : 'Email Address'}" style="padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:inherit;font-size:15px;">
+      </div>`
+    : '';
+
+  const checkoutBlockHTML = bumpHTML + checkoutFormHTML;
+
+  // Unified checkout handler: validates name/email (if enabled), saves to Sheets, picks bundle vs base link, then proceeds
+  let ctaHref = '#checkout';
+  let ctaOnclick = '';
+  {
+    const fcAttrSafe = (jsExpr) => jsExpr.replace(/"/g, '&quot;');
+    let messengerPart = '';
+    if (bumpName && contactMessenger && selectedPay !== 'direct') {
+      let mv = contactMessenger.trim().replace(/^@/, '');
+      let bumpMessengerLink = /^https?:\/\//i.test(mv) ? mv : (/^(m\.me|www\.messenger\.com|messenger\.com)\//i.test(mv) ? `https://${mv}` : `https://m.me/${mv.replace(/^\/+/, '')}`);
+      const bumpAlertMsg = tone.startsWith('english')
+        ? `Opening Messenger — please mention you also want to add "${bumpName}" (${bumpPrice}) when you message us. Continuing to checkout...`
+        : `Bubuksan ang Messenger — sabihin lang na gusto mo ring idagdag ang "${bumpName}" (${bumpPrice}) sa message mo. Ituloy na sa checkout...`;
+      messengerPart = `if(bp){window.open(${fcAttrSafe(JSON.stringify(bumpMessengerLink))},'_blank');alert(${fcAttrSafe(JSON.stringify(bumpAlertMsg))});}`;
+    }
+    const validationMsg = tone.startsWith('english') ? 'Please fill in your name and email before continuing.' : 'Pakilagay ang pangalan at email mo bago magpatuloy.';
+    const baseHrefJs = selectedPay === 'direct' ? `'#'` : fcAttrSafe(JSON.stringify(payVal));
+    const bundleHrefJs = bumpBundleLink ? fcAttrSafe(JSON.stringify(bumpBundleLink)) : baseHrefJs;
+    const directCallJs = selectedPay === 'direct' ? `fcShowPayInstructions();` : '';
+    const saveFetchJs = appsScriptUrl
+      ? `fetch(${fcAttrSafe(JSON.stringify(appsScriptUrl))},{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({email:em,source:${fcAttrSafe(JSON.stringify(product))}+' (checkout: '+nm+')'})}).catch(function(){});`
+      : '';
+    ctaOnclick = `onclick="if(typeof fcTrackEvent==='function'){fcTrackEvent('InitiateCheckout');}var b=document.getElementById('fc-bump-checkbox');var bp=b&&b.checked;var ne=document.getElementById('fc-checkout-name');var ee=document.getElementById('fc-checkout-email');if(ne&&ee){var nm=ne.value.trim();var em=ee.value.trim();if(!nm||!em){alert(${fcAttrSafe(JSON.stringify(validationMsg))});return false;}${saveFetchJs}}${messengerPart}var h=bp?${bundleHrefJs}:${baseHrefJs};${directCallJs}if(h&&h!=='#'){window.location.href=h;}return false;"`;
+    ctaHref = '#';
+  }
+
+  document.getElementById('emp').style.display='none';
+  document.getElementById('preview-frame').style.display='none';
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('out-label').textContent=t('outGenerating');
+  document.querySelectorAll('.btn-gen').forEach(b=>b.disabled=true);
+
+  const sysPrompt = `You are a world-class direct response copywriter and frontend developer.
+Build a COMPLETE single-file HTML long-form high-converting sales page. Write actual persuasive copy — no filler, no placeholders. Use modern, plain, relatable language — avoid stiff, overly formal, or old-fashioned phrasing. Write like a sharp modern marketer talking to a real person, not a textbook.
+
+CONVERSION REQUIREMENTS (apply these regardless of tone selected — friendly/modern voice should never mean weak persuasion):
+- Open with a specific, benefit-driven headline — not a vague or generic claim
+- Make the pain points section specific and felt, not abstract
+- Stack the value of what's included so the price feels like a steal by the time they reach it
+- Use real urgency/scarcity language where appropriate (e.g. limited-time pricing, cart closing, bonus expiring) — grounded in what's provided, never fabricate fake countdowns or fake numbers
+- NEVER invent product features, technical capabilities, hosting services, or infrastructure claims not explicitly stated in the brief below. If unsure, write generic marketing language instead of a specific false claim.
+- NEVER use an img tag with an invented/imaginary file path or URL anywhere on the page (this always renders as a broken image icon and looks unprofessional). Only reference images using the exact placeholder tokens provided in this brief (like __HERO_IMG__, __GALLERY_IMG_n__, __PROOF_IMG_n__). For any other icon, decoration, or visual accent, use an emoji or CSS shapes instead.
+- Close with a strong, direct final CTA that restates the core transformation
+- Keep sentences short and skimmable — this is a page people scan, not read top to bottom
+
+DESIGN TOKENS (use exactly):
+Background: ${colors.gradient ? `use this exact CSS on the body/outermost wrapper: background: ${colors.gradient}; background-attachment: fixed; — the fixed attachment is REQUIRED so all layers of the gradient stay visible as the page scrolls, instead of stretching thin over a tall page.` : colors.bg} | Accent: ${colors.acc} | Secondary/Gold: ${colors.sec} | Text: ${colors.txt}
+Button style: ${btnStyle}
+Font link: <link href="${fontLinks[font]||fontLinks['poppins']}" rel="stylesheet">
+Design direction: clean modern SaaS-meets-premium aesthetic. Generous spacing, tight line-height on headlines, subtle shadows on cards/buttons, consistent border-radius. Avoid cluttered or dated layouts.
+LAYOUT RULE FOR CARD GRIDS (bullets, features, "who this is for", etc.): use display:flex;flex-wrap:wrap;justify-content:center; with each card at a fixed width (e.g. flex:0 1 300px;) — NEVER use CSS grid with a fixed column count for these, because when the item count doesn't divide evenly (e.g. 5 items in 3 columns), it leaves an orphaned, awkwardly-aligned item on the last row. Flex-wrap with justify-content:center naturally centers any leftover items instead.
+
+INJECT THESE HTML BLOCKS EXACTLY AS-IS — do not modify the src="__..." placeholder strings, copy them character-for-character:
+LOGO: ${logoHTML}
+HERO IMAGE: ${heroImgHTML||'none provided'}
+VIDEO: ${videoHTML||'none provided'}
+GALLERY: ${galleryHTML||'none provided'}
+PROOF/SAMPLES SECTION (insert this exactly as-is, do not rewrite or restyle it — it's pre-built with alternating image/text layout): ${proofHTML||'none provided'}
+COUNTDOWN TIMER (insert this exactly as-is if provided, near the announcement bar or price section — it's a REAL live countdown, never invent your own fake countdown besides this one): ${countdownHTML||'none provided'}
+POTENTIAL REVENUE CALCULATOR (insert this exactly as-is if provided — it's a pre-built interactive tool, do not rewrite it): ${calcHTML||'none provided'}
+ORDER BUMP: ${bumpHTML||'none provided'}
+
+ALL CTA BUTTONS must use: href="${ctaHref}" ${ctaOnclick}
+
+REQUIRED JAVASCRIPT:
+1. FAQ accordion - smooth toggle
+2. Floating sticky CTA bar after scrolling 400px
+3. Social proof toast every 15 seconds with a random realistic name + city appropriate to the target market described below
+
+PAGE SECTIONS (write ALL, keep copy tight and punchy — concise sentences, not essays):
+1. Announcement bar - urgency + price. IMPORTANT: do NOT use position:fixed or position:sticky for this bar — a site navigation header is already injected above your content and is sticky at the top of the page, so this bar must sit in normal document flow (it will appear directly below the nav).
+2. Hero - punchy headline, subheadline, CTA, hero image
+3. Video section if provided
+4. "This is for you if..." - 5 buyer bullets. For any icon or visual accent on these cards, use an emoji (e.g. 🎯 ✨ 💡) or a simple CSS shape — NEVER use an img tag with an invented file path (e.g. "icon1.svg") since that file doesn't exist and will show as a broken image icon. Only use an img tag for the specific placeholder tokens provided elsewhere in this brief (like __HERO_IMG__, __GALLERY_IMG_n__) — never invent your own image sources anywhere in the page.
+5. Pain points - "Does this sound familiar?" - 5-6 bullets
+6. Solution bridge - 2-3 short paragraphs
+7. What's included - breakdown with gallery
+8. Transformation - before/after, brief
+9. Testimonials — write 3 short testimonials with realistic names fitting the target market, and make them auto-rotate continuously using this EXACT CSS-only infinite marquee pattern (do NOT use JavaScript, do NOT use scroll-snap, do NOT make it draggable — copy this structure exactly, only replacing the card content):
+<div style="overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);">
+  <div style="display:flex;gap:20px;width:max-content;animation:fcTestiMarquee 28s linear infinite;">
+    <!-- render the 3 testimonial cards here, then IMMEDIATELY repeat the exact same 3 cards a second time (6 cards total) so the loop is seamless -->
+  </div>
+</div>
+<style>@keyframes fcTestiMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}</style>
+Each testimonial card should have a fixed width (e.g. 280-320px, flex-shrink:0) so the row scrolls smoothly.
+10. Proof/Samples Section — if a PROOF/SAMPLES SECTION block is provided below, insert it here exactly as given (do not rewrite, restyle, or omit any part of it). Add a short section heading above it like "See It In Action" or "Real Results" if it fits the offer.
+11. How it works - 3 steps
+12. Potential Revenue Calculator — if a POTENTIAL REVENUE CALCULATOR block is provided below, insert it here exactly as given (do not rewrite it), with a short heading like "See Your Potential" above it.
+13. Price stack - crossed out original, highlighted final. IMPORTANT: place this exact HTML comment on its own line immediately BEFORE the price stack section, even if no bonuses were provided: <!-- BONUS_STACK --> — FunnelCraft automatically fills this with a free-bonuses value-stack section when bonuses are provided, or removes it cleanly when there are none. Do not write your own bonus section — only place the marker comment. Immediately AFTER the price (before the main CTA button), place this exact marker on its own line: <!-- COUPON_FIELD --> — FunnelCraft fills this automatically. Give the main/primary CTA button the exact id="fc-cta-main" (in addition to any onclick/href it already needs). Immediately below the main CTA button, place this exact marker on its own line: <!-- TRUST_BADGES -->.
+14. Order bump if provided
+15. Guarantee section - brief
+16. FAQ accordion - 5 questions, short answers. CRITICAL: only answer using facts actually provided in this brief (offer, price, guarantee, delivery method). NEVER invent claims about hosting services, "integrated cloud systems," technical infrastructure, or any other capability not explicitly described above — if you don't have a real answer to a question, write a different, safer question instead.
+17. "Before You Go" closing section — write 2-4 short sentences using genuine loss-aversion framing (what they lose by NOT acting), grounded ONLY in the real offer/transformation described in this brief. Must feel like honest, warm advice from a real person — NOT hypey or salesy. Do not invent new claims, numbers, or bonuses not already mentioned elsewhere in this brief. End with a soft, direct nudge into the final CTA below.
+18. Final CTA
+19. Footer — brand name, copyright line, tagline. Do NOT add your own "Privacy Policy", "Terms", or "Disclaimer" links here — a working legal footer with those exact links is already injected automatically after your content, so adding your own (non-functional, placeholder href="#") versions would create confusing duplicates.
+
+IMPORTANT: Keep every section's copy concise and punchy. Do not write long paragraphs. This must fit completely within the output token budget — prioritize finishing the full HTML document over writing extra-long copy in any one section.
+
+OUTPUT: Pure valid HTML only starting with <!DOCTYPE html>. No markdown. No backticks. No explanation. The response MUST end with a complete closing </html> tag.`;
+
+  const userPrompt = `Build the complete long-form sales page:
+
+BRAND: ${brand}
+PRODUCT: ${product}
+OFFER: ${offer}
+TARGET BUYER: ${buyer}
+BUYER PROBLEMS: ${problem}
+TRANSFORMATION: ${transform}
+WHAT IS INCLUDED: ${includes}
+SELLING PRICE: ${price}
+ORIGINAL PRICE: ${origPrice}
+GUARANTEE: ${guarantee}
+COPYWRITING TONE: ${toneMap[tone]||toneMap['english-modern']}
+
+Write every section with real, emotionally persuasive copy, matching the tone and language above.`;
+
+  try {
+    let raw = await callAI(sysPrompt, userPrompt);
+    let cleaned = raw.replace(/^```html\n?/i,'').replace(/^```\n?/i,'').replace(/```$/gi,'').trim();
+
+    if (!cleaned.toLowerCase().includes('</html>')) {
+      throw new Error('The generated page got cut off (incomplete). Try clicking "Generate" again — this can happen with longer offer descriptions. You can also try shortening the "What\'s Included" field.');
+    }
+
+    // Swap placeholder tags with the real uploaded images (kept OUT of the AI prompt to avoid token overflow)
+    if (heroB64) cleaned = cleaned.split('__HERO_IMG__').join(heroB64);
+    if (logoB64) cleaned = cleaned.split('__LOGO_IMG__').join(logoB64);
+    galleryFiltered.forEach((g, i) => {
+      cleaned = cleaned.split(`__GALLERY_IMG_${i}__`).join(g.src);
+    });
+    proofFiltered.forEach((p, i) => {
+      cleaned = cleaned.split(`__PROOF_IMG_${i}__`).join(p.src);
+    });
+
+    // Inject tracking pixels (deterministic, kept out of the AI prompt to save tokens)
+    let trackingHTML = '';
+    if (metaPixel) {
+      trackingHTML += `\n<!-- Meta Pixel -->\n<script>\n!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${metaPixel}');fbq('track','PageView');<\/script>\n`;
+    }
+    if (ga4Id) {
+      trackingHTML += `\n<!-- Google Analytics 4 -->\n<script async src="https://www.googletagmanager.com/gtag/js?id=${ga4Id}"><\/script>\n<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga4Id}');<\/script>\n`;
+    }
+    if (tiktokPixel) {
+      trackingHTML += `\n<!-- TikTok Pixel -->\n<script>\n!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('${tiktokPixel}');ttq.page();}(window,document,'ttq');\n<\/script>\n`;
+    }
+    if (metaPixel || ga4Id || tiktokPixel) {
+      // Universal conversion-event helper — call fcTrackEvent('InitiateCheckout') or fcTrackEvent('Purchase')
+      // from anywhere in the page. Fires the equivalent event on every connected pixel automatically.
+      trackingHTML += `\n<!-- FunnelCraft universal conversion event helper -->\n<script>\nfunction fcTrackEvent(name){\n  try{\n    if(typeof fbq!=='undefined'){ fbq('track', name === 'InitiateCheckout' ? 'InitiateCheckout' : 'Purchase'); }\n  }catch(e){}\n  try{\n    if(typeof gtag!=='undefined'){ gtag('event', name === 'InitiateCheckout' ? 'begin_checkout' : 'purchase'); }\n  }catch(e){}\n  try{\n    if(typeof ttq!=='undefined'){ ttq.track(name === 'InitiateCheckout' ? 'InitiateCheckout' : 'PlaceAnOrder'); }\n  }catch(e){}\n}\n<\/script>\n`;
+    }
+
+    // Open Graph tags — controls how the link looks when shared on Messenger/Facebook/etc
+    const ogTitle = (product || brand || 'Check this out').replace(/"/g, '&quot;');
+    const ogDesc = (offer || '').slice(0, 160).replace(/"/g, '&quot;');
+    trackingHTML += `\n<!-- Open Graph / social share preview -->\n<meta property="og:title" content="${ogTitle}">\n${ogDesc ? `<meta property="og:description" content="${ogDesc}">\n` : ''}${ogImageUrl ? `<meta property="og:image" content="${ogImageUrl}">\n` : ''}<meta property="og:type" content="website">\n`;
+    if (trackingHTML && !(optinOn || upsellOn || downsellOn || thankyouOn || aboutOn || servicesOn || faqOn || contactOn)) {
+      // Single-page mode only: inject directly since buildFunnelBundle (which handles this more reliably) won't run
+      cleaned = /<\/head>/i.test(cleaned)
+        ? cleaned.replace(/<\/head>/i, trackingHTML + '</head>')
+        : cleaned.replace(/<html[^>]*>/i, m => m + trackingHTML);
+    }
+
+    // Inject legal pages (Privacy, Terms, Disclaimer) as a footer + lightweight modal — no extra hosting needed
+    if (legalOn) {
+      const escBiz = legalBiz.replace(/</g,'&lt;');
+      const legalTexts = {
+        privacy: `<h2>Privacy Policy</h2><p>${escBiz} ('we', 'us') respects your privacy. This page collects information you voluntarily submit (such as name, email, and payment details) solely to process your order and communicate with you. We do not sell your personal data to third parties. We may use third-party services (payment processors, analytics, advertising pixels) that collect data per their own privacy policies. By using this page, you consent to this collection. Contact us at ${legalEmail} for any privacy requests, including data deletion.</p>`,
+        terms: `<h2>Terms of Service</h2><p>By purchasing or using this product from ${escBiz}, you agree to use it for lawful, personal, or business purposes only, and not to resell, redistribute, or copy the materials without permission. All content is provided 'as is' without warranties beyond what is explicitly stated on this page. ${escBiz} reserves the right to modify pricing, offers, or availability at any time. Contact ${legalEmail} with any questions.</p>`,
+        disclaimer: `<h2>Earnings &amp; Results Disclaimer</h2><p>Any results, outcomes, or examples mentioned on this page are not guaranteed. Individual results vary based on effort, background, and circumstances. This offer is for educational/informational purposes and is not a promise or guarantee of specific results, income, or performance. Always do your own due diligence before purchasing. Contact ${legalEmail} with questions.</p>`
+      };
+      const legalBlock = `
+<div id="fc-legal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;color:#111;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;border-radius:12px;padding:32px;position:relative;font-family:sans-serif;">
+    <button onclick="document.getElementById('fc-legal-modal').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+    <div id="fc-legal-content" style="font-size:14px;line-height:1.7;"></div>
+  </div>
+</div>
+<script>
+const FC_LEGAL = ${JSON.stringify(legalTexts)};
+function fcShowLegal(type){document.getElementById('fc-legal-content').innerHTML=FC_LEGAL[type];document.getElementById('fc-legal-modal').style.display='flex';}
+<\/script>
+<div style="text-align:center;padding:18px 12px;font-size:12px;background:#1a1a1a;color:rgba(255,255,255,0.75);">
+  <a href="#" onclick="fcShowLegal('privacy');return false;" style="color:#fff;text-decoration:underline;margin:0 8px;">Privacy Policy</a>
+  <a href="#" onclick="fcShowLegal('terms');return false;" style="color:#fff;text-decoration:underline;margin:0 8px;">Terms</a>
+  <a href="#" onclick="fcShowLegal('disclaimer');return false;" style="color:#fff;text-decoration:underline;margin:0 8px;">Disclaimer</a>
+</div>`;
+      cleaned = /<\/body>/i.test(cleaned)
+        ? cleaned.replace(/<\/body>/i, legalBlock + '</body>')
+        : cleaned + legalBlock;
+    }
+
+    // Build the Free Bonuses value-stack section (deterministic — not left to the AI)
+    // and drop it in wherever the AI placed the <!-- BONUS_STACK --> marker.
+    (function fcInjectBonusStack() {
+      const hasMarker = /<!--\s*BONUS_STACK\s*-->/.test(cleaned);
+      const bonusLines = (bonusesList || '').split('\n').map(l => l.trim()).filter(Boolean);
+      if (!hasMarker) return;
+      if (bonusLines.length === 0) {
+        cleaned = cleaned.replace(/<!--\s*BONUS_STACK\s*-->/, '');
+        return;
+      }
+      const bonusItems = bonusLines.map(line => {
+        const parts = line.split('|').map(p => p.trim());
+        const name = parts[0] || '';
+        const rawValue = parts[1] || '0';
+        const desc = parts[2] || '';
+        const numericValue = parseFloat(String(rawValue).replace(/[^0-9.]/g, '')) || 0;
+        return { name, rawValue, desc, numericValue };
+      }).filter(b => b.name);
+      const totalValue = bonusItems.reduce((sum, b) => sum + b.numericValue, 0);
+      const currencySymbol = (bonusItems[0].rawValue.match(/^[^\d.]+/) || ['$'])[0].trim() || '$';
+      const bonusCardsHTML = bonusItems.map(b => `
+        <div style="display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:18px 20px;margin-bottom:12px;text-align:left;">
+          <div style="font-size:22px;flex-shrink:0;">🎁</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px;">${b.name.replace(/</g, '&lt;')}</div>
+            ${b.desc ? `<div style="opacity:.75;font-size:13px;line-height:1.5;margin-bottom:6px;">${b.desc.replace(/</g, '&lt;')}</div>` : ''}
+            <div style="font-size:13px;"><span style="text-decoration:line-through;opacity:.5;">${b.rawValue}</span> <strong style="color:#5FC97A;">FREE</strong></div>
+          </div>
+        </div>`).join('');
+      const bonusStackBlock = `
+<div style="max-width:600px;margin:32px auto;padding:0 20px;">
+  <div style="text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-bottom:16px;">🎁 Plus, You'll Also Get These Free Bonuses...</div>
+  ${bonusCardsHTML}
+  <div style="text-align:center;margin-top:18px;padding-top:16px;border-top:2px dashed rgba(255,255,255,0.15);font-size:16px;font-weight:800;">
+    Total Bonus Value: <span style="text-decoration:line-through;opacity:.6;">${currencySymbol}${totalValue.toFixed(0)}</span> <span style="color:#5FC97A;">Included FREE Today</span>
+  </div>
+</div>`;
+      cleaned = cleaned.replace(/<!--\s*BONUS_STACK\s*-->/, bonusStackBlock);
+    })();
+
+    // Coupon code field — simple client-side check, shows a message when the code matches (not a secure discount system)
+    (function fcInjectCouponField() {
+      const hasMarker = /<!--\s*COUPON_FIELD\s*-->/.test(cleaned);
+      if (!hasMarker) return;
+      if (!couponCode) {
+        cleaned = cleaned.replace(/<!--\s*COUPON_FIELD\s*-->/, '');
+        return;
+      }
+      const couponBlock = `
+<div style="max-width:360px;margin:16px auto;text-align:center;">
+  <div style="display:flex;gap:8px;">
+    <input type="text" id="fc-coupon-input" placeholder="Have a coupon code?" style="flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:${colors.txt};font-size:13px;">
+    <button type="button" onclick="fcCheckCoupon()" style="padding:10px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:${colors.txt};font-size:13px;cursor:pointer;">Apply</button>
+  </div>
+  <div id="fc-coupon-result" style="font-size:13px;margin-top:8px;"></div>
+</div>
+<script>
+function fcCheckCoupon(){
+  var input = document.getElementById('fc-coupon-input');
+  var result = document.getElementById('fc-coupon-result');
+  if (!input || !result) return;
+  var val = input.value.trim().toUpperCase();
+  if (val === ${JSON.stringify(couponCode.toUpperCase())}) {
+    result.style.color = '#5FC97A';
+    result.textContent = ${JSON.stringify(couponMessage || 'Coupon applied!')};
+  } else {
+    result.style.color = '#e88';
+    result.textContent = 'Invalid code — please check and try again.';
+  }
+}
+<\/script>`;
+      cleaned = cleaned.replace(/<!--\s*COUPON_FIELD\s*-->/, couponBlock);
+    })();
+
+    // Trust badges — generic, non-trademarked payment/security reassurance row below the CTA
+    (function fcInjectTrustBadges() {
+      const hasMarker = /<!--\s*TRUST_BADGES\s*-->/.test(cleaned);
+      if (!hasMarker) return;
+      const trustBlock = `
+<div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:16px 0;font-size:12px;opacity:.7;">
+  <span>🔒 Secure Checkout</span>
+  <span>⚡ Instant Access</span>
+  <span>💳 Safe Payment</span>
+</div>`;
+      cleaned = cleaned.replace(/<!--\s*TRUST_BADGES\s*-->/, trustBlock);
+    })();
+
+    // Inject rich Payment Instructions modal for Direct/Manual checkout (clickable links, QR code, price breakdown)
+    if (selectedPay === 'direct' && payVal) {
+      const fcPayData = { product, price, payVal, bumpName, bumpPrice, payqrB64 };
+      const payModalBlock = `
+<div id="fc-pay-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;color:#111;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;border-radius:12px;padding:32px;position:relative;font-family:sans-serif;text-align:left;">
+    <button onclick="document.getElementById('fc-pay-modal').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+    <h3 style="margin:0 0 16px 0;font-size:18px;">Complete Your Order</h3>
+    <div id="fc-pay-content" style="font-size:14px;line-height:1.8;"></div>
+  </div>
+</div>
+<script>
+const FC_PAY_DATA = ${JSON.stringify(fcPayData)};
+function fcLinkify(t){
+  var e=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  e=e.replace(/(https?:\\/\\/[^\\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:#6C4CE0;text-decoration:underline;word-break:break-all;">$1<\\/a>');
+  return e.replace(/\\n/g,'<br>');
+}
+function fcShowPayInstructions(){
+  var b=document.getElementById('fc-bump-checkbox');
+  var checked=b&&b.checked;
+  var d=FC_PAY_DATA;
+  var h='<p><strong>'+d.product+'</strong> — '+d.price+'</p>';
+  if(checked && d.bumpName){ h+='<p>+ '+d.bumpName+' — '+d.bumpPrice+'</p>'; }
+  h+='<hr style="border:none;border-top:1px solid #eee;margin:14px 0;">';
+  h+='<div>'+fcLinkify(d.payVal)+'</div>';
+  if(d.payqrB64){ h+='<img src="'+d.payqrB64+'" alt="Payment QR code" style="max-width:220px;display:block;margin:16px auto 0;border-radius:8px;border:1px solid #eee;">'; }
+  document.getElementById('fc-pay-content').innerHTML=h;
+  document.getElementById('fc-pay-modal').style.display='flex';
+}
+<\/script>`;
+      cleaned = /<\/body>/i.test(cleaned)
+        ? cleaned.replace(/<\/body>/i, payModalBlock + '</body>')
+        : cleaned + payModalBlock;
+    }
+
+    // Exit-intent popup — fires once per visit when the mouse moves toward closing the tab
+    if (exitOn) {
+      const exitBlock = `
+<div id="fc-exit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:99998;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:${colors.bg};color:${colors.txt};max-width:460px;width:100%;border-radius:14px;padding:36px;position:relative;text-align:center;border:1px solid rgba(255,255,255,0.15);">
+    <button onclick="document.getElementById('fc-exit-modal').style.display='none'" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:${colors.txt};">&times;</button>
+    <h3 style="font-size:22px;margin:0 0 14px 0;">${exitHeadline.replace(/</g, '&lt;')}</h3>
+    <p style="font-size:15px;opacity:.85;line-height:1.6;margin-bottom:20px;">${exitOffer.replace(/</g, '&lt;')}</p>
+    <button onclick="document.getElementById('fc-exit-modal').style.display='none';document.getElementById('fc-cta-main')&&document.getElementById('fc-cta-main').scrollIntoView({behavior:'smooth'});" style="padding:14px 28px;border-radius:8px;border:none;background:${colors.acc};color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Take Me There</button>
+  </div>
+</div>
+<script>
+(function(){
+  var shown = false;
+  document.addEventListener('mouseout', function(e){
+    if (shown) return;
+    if (e.clientY <= 0 || (e.relatedTarget === null && e.clientY < 10)) {
+      shown = true;
+      var m = document.getElementById('fc-exit-modal');
+      if (m) m.style.display = 'flex';
+    }
+  });
+})();
+<\/script>`;
+      cleaned = /<\/body>/i.test(cleaned)
+        ? cleaned.replace(/<\/body>/i, exitBlock + '</body>')
+        : cleaned + exitBlock;
+    }
+
+    // Build multi-page funnel wrapper (single file, hash-based navigation — no ZIP)
+    if (optinOn || upsellOn || downsellOn || thankyouOn || aboutOn || servicesOn || faqOn || contactOn) {
+      cleaned = buildFunnelBundle(cleaned, {
+        colors, font, fontLinks, btnStyle, brand, product, trackingHTML,
+        optinOn, optinMagnet, optinHeadline, optinEmbed,
+        upsellOn, upsellName, upsellPrice, upsellPayVal, upsellPayMethod,
+        upsellGcash, upsellMaya, upsellAcctName, upsellProofContact, upsellInstructions,
+        downsellOn, downsellName, downsellPrice, downsellPayVal,
+        thankyouOn, thankyouDelivery, thankyouLink,
+        aboutOn, aboutText, servicesOn, servicesList, faqOn, faqList,
+        contactOn, contactEmail, contactMessenger, socialFacebook, socialInstagram, socialTiktok, socialYoutube
+      });
+    }
+
+    generatedHTML = cleaned;
+    document.getElementById('loading').classList.remove('show');
+    const frame = document.getElementById('preview-frame');
+    frame.style.display='block';
+    frame.srcdoc = generatedHTML;
+    document.getElementById('out-label').textContent=t('outDone');
+    document.getElementById('copy-btn').disabled=false;
+    document.getElementById('dl-btn').disabled=false;
+  } catch(e) {
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('emp').style.display='flex';
+    document.getElementById('out-label').textContent=t('outError');
+    alert(t('alertGenErr')+e.message);
+  }
+  document.querySelectorAll('.btn-gen').forEach(b=>b.disabled=false);
+}
+
+const DRAFT_KEY = 'funnelcraft_draft_v1';
+const DRAFT_FIELD_IDS = ['f-offer','f-buyer','f-problem','f-transform','f-includes','f-price','f-origprice',
+  'f-guarantee','f-brand','f-product','f-video','f-tone','pay-val','bump-name','bump-price',
+  'font-sel','btn-style','f-metapixel','f-ga4','f-tiktokpixel','f-legal-biz','f-legal-email',
+  'c-bg','c-acc','c-sec','c-txt','f-bonuses-list'];
+
+function saveDraft() {
+  try {
+    const data = {};
+    DRAFT_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) data[id] = el.value;
+    });
+    data['f-legal-toggle'] = document.getElementById('f-legal-toggle').checked;
+    data.selectedPay = selectedPay;
+    data.savedAt = new Date().toISOString();
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    alert(t('alertDraftSaved') || 'Draft saved! ✓');
+  } catch(e) {
+    alert('Could not save draft: ' + e.message);
+  }
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) { alert(t('alertNoDraft') || 'No saved draft found.'); return; }
+    const data = JSON.parse(raw);
+    DRAFT_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id] !== undefined) el.value = data[id];
+    });
+    if (data['f-legal-toggle'] !== undefined) document.getElementById('f-legal-toggle').checked = data['f-legal-toggle'];
+    if (data.selectedPay) {
+      const opt = Array.from(document.querySelectorAll('.pay-opt')).find(o => o.getAttribute('onclick').includes(`'${data.selectedPay}'`));
+      if (opt) selectPay(opt, data.selectedPay);
+    }
+    alert((t('alertDraftLoaded') || 'Draft loaded from') + ' ' + new Date(data.savedAt).toLocaleString());
+  } catch(e) {
+    alert('Could not load draft: ' + e.message);
+  }
+}
+
+function fcSetPreviewMode(mode) {
+  const frame = document.getElementById('preview-frame');
+  const btnDesktop = document.getElementById('preview-desktop-btn');
+  const btnMobile = document.getElementById('preview-mobile-btn');
+  if (mode === 'mobile') {
+    frame.style.width = '390px';
+    frame.style.maxWidth = '100%';
+    btnDesktop.style.opacity = '.5';
+    btnMobile.style.opacity = '1';
+  } else {
+    frame.style.width = '100%';
+    btnDesktop.style.opacity = '1';
+    btnMobile.style.opacity = '.5';
+  }
+}
+
+function dlPage() {
+  if(!generatedHTML) return;
+  const blob = new Blob([generatedHTML],{type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'funnelcraft-salespage.html';
+  a.click();
+}
+
+function copyOut() {
+  if(!generatedHTML) return;
+  navigator.clipboard.writeText(generatedHTML);
+  const b = document.getElementById('copy-btn');
+  b.textContent=t('btnCopied');
+  setTimeout(()=>b.textContent=t('btnCopy'),2000);
+}
+
+applyPreset();
+setLang('en');
+updateStepUI();
+addSlot(); addSlot(); addSlot();
+</script>
+</body>
+</html>
