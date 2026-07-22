@@ -1670,7 +1670,7 @@ function buildFunnelBundle(salesDoc, cfg) {
 
   const storySection = cfg.storyOn ? `
 <div id="fc-page-story" class="fc-page" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};">
-  <link href="${luxuryFontLink}" rel="stylesheet">
+  <link href="${typeof luxuryfontlink !== 'undefined' ? luxuryfontlink : (window.luxuryfontlink || '')}" rel="stylesheet">
 
   ${topNavBar}
   ${storyHeroHTML}
