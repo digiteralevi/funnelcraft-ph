@@ -1670,7 +1670,7 @@ function buildFunnelBundle(salesDoc, cfg) {
 
   const storySection = cfg.storyOn ? `
 <div id="fc-page-story" class="fc-page" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};">
-  <link href="${typeof luxuryfontlink !== 'undefined' ? luxuryfontlink : (window.luxuryfontlink || '')}" rel="stylesheet">
+  <link href="${cfg.fontLinks['luxury-editorial']}" rel="stylesheet">
 
   ${topNavBar}
   ${storyHeroHTML}
@@ -1858,9 +1858,8 @@ async function generate() {
     'lora-inter':'https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap',
     'luxury-editorial':'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap'
   };
-  // Dedicated luxury/editorial pairing for the Product Story page — always loaded when
-  // that page is enabled, regardless of the main sales page's chosen font.
-  const luxuryFontLink = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap';
+  // Note: the luxury-editorial font link used by the Story page is read from
+  // cfg.fontLinks['luxury-editorial'] inside buildFunnelBundle (see fontLinks above).
 
   // Use lightweight placeholder tags instead of base64 in the prompt (avoids token overflow).
   // Real images get swapped in AFTER the AI responds.
