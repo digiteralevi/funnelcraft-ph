@@ -1025,7 +1025,7 @@ const FC_HERO_LAYOUTS = {
     .subhead{font-size:17px;color:var(--brand-text-muted);max-width:44ch;}
     </style>
     <section class="hero">
-      <div class="media"><img src="https://placehold.co/900x1100/1a2b4c/fffaf3"></div>
+      <div class="media"><div style="width:100%;height:100%;background:#1a2b4c;"></div></div>
       <div class="content">
         <span class="eyebrow">Free Live Workshop</span>
         <h1 class="headline">How to <mark>Sell Out</mark> Your Course Without an Audience</h1>
@@ -1045,7 +1045,7 @@ const FC_HERO_LAYOUTS = {
     .subhead{font-size:18px;color:#b7bcc8;max-width:55ch;margin-bottom:24px;}
     </style>
     <section class="hero">
-      <img src="https://placehold.co/1600x1000/0d0f14/ffcf3f">
+      <div style="width:100%;height:100%;background:#0d0f14;"></div>
       <div class="content">
         <span class="eyebrow">Limited Time</span>
         <h1 class="headline">From Meh to <span class="accent">Metal.</span></h1>
@@ -1072,7 +1072,7 @@ const FC_HERO_LAYOUTS = {
         <p class="subhead">An in-depth look at the process top course creators are using this year.</p>
         <a href="#" class="fc-btn-primary">Read the Full Story</a>
       </div>
-      <div class="media"><img src="https://placehold.co/900x1100/f4f4f2/111111"></div>
+      <div class="media"><div style="width:100%;height:100%;background:#f4f4f2;"></div></div>
     </section>`,
   'centered-stack': () => `<style>${fcBaseStyles(['10px','20px','32px'])}
     body{background:#fffdf8;}
@@ -1084,7 +1084,7 @@ const FC_HERO_LAYOUTS = {
     .subhead{font-size:16px;color:var(--brand-text-muted);max-width:50ch;margin:0 auto 24px;}
     </style>
     <section class="hero">
-      <div class="frame"><img src="https://placehold.co/400x400/2d1b3d/f4a940"></div>
+      <div class="frame"><div style="width:100%;height:100%;background:#2d1b3d;"></div></div>
       <span class="eyebrow">Meet Your Coach</span>
       <h1 class="headline">Ready to Rewrite Your Story?</h1>
       <p class="subhead">Join thousands who transformed their lives with this simple system.</p>
@@ -1100,7 +1100,7 @@ const FC_HERO_LAYOUTS = {
     .subhead{font-size:16px;color:var(--brand-text-muted);max-width:44ch;margin-bottom:24px;}
     </style>
     <section class="hero">
-      <div class="media"><img src="https://placehold.co/900x1100/0b3d2e/ffb703"></div>
+      <div class="media"><div style="width:100%;height:100%;background:#0b3d2e;"></div></div>
       <div class="content">
         <span class="eyebrow">Limited Spots</span>
         <h1 class="headline">Unlock Your <span style="color:var(--brand-secondary)">Full Power</span></h1>
@@ -1118,7 +1118,7 @@ const FC_HERO_LAYOUTS = {
     .subhead{font-size:16px;color:var(--brand-text-muted);max-width:60ch;margin-bottom:24px;}
     </style>
     <section class="hero">
-      <div class="media"><img src="https://placehold.co/500x1000/1e2a3a/3fbf8f"></div>
+      <div class="media"><div style="width:100%;height:100%;background:#1e2a3a;"></div></div>
       <div class="content">
         <span class="eyebrow">Complete Guide</span>
         <h1 class="headline">Everything You Need to Know, In One Place</h1>
@@ -1137,7 +1137,7 @@ const FC_HERO_LAYOUTS = {
     .benefit{grid-column:span 2;background:var(--brand-bg-alt);border-radius:var(--radius-md);padding:20px;font-size:13px;font-weight:600;}
     </style>
     <div class="grid">
-      <div class="media"><img src="https://placehold.co/900x1000/3a1f5d/ff5c8a"></div>
+      <div class="media"><div style="width:100%;height:100%;background:#3a1f5d;"></div></div>
       <div class="textcard">
         <span class="eyebrow">Creative Suite</span>
         <h1 class="headline">Create Anything, Anytime</h1>
@@ -1157,7 +1157,7 @@ const FC_HERO_LAYOUTS = {
     .subhead{font-size:15px;color:var(--brand-text-muted);line-height:1.7;margin-bottom:28px;}
     </style>
     <section class="hero">
-      <div class="frame"><img src="https://placehold.co/360x450/f9f8f6/a68a64"></div>
+      <div class="frame"><div style="width:100%;height:100%;background:#f9f8f6;"></div></div>
       <span class="eyebrow">Exclusive Access</span>
       <h1 class="headline">Simplicity is the Ultimate Sophistication</h1>
       <p class="subhead">An exclusive experience, designed for those who value quality over quantity.</p>
@@ -1174,7 +1174,7 @@ const FC_HERO_LAYOUTS = {
     .subhead{font-size:16px;color:var(--brand-text-muted);margin-bottom:24px;}
     </style>
     <section class="hero">
-      <div class="media"><img src="https://placehold.co/600x750/22254a/ff7a45"></div>
+      <div class="media"><div style="width:100%;height:100%;background:#22254a;"></div></div>
       <div class="badge">500+ Already Enrolled</div>
       <div class="content">
         <span class="eyebrow">A New Experience</span>
@@ -1202,7 +1202,7 @@ const FC_HERO_LAYOUTS = {
           <p class="subhead">One platform, every feature you need.</p>
           <a href="#" class="fc-btn-primary">Try It Free</a>
         </div>
-        <div class="media"><img src="https://placehold.co/700x700/0e2a3d/2ec4b6"></div>
+        <div class="media"><div style="width:100%;height:100%;background:#0e2a3d;"></div></div>
       </div>
     </div>`
 };
@@ -2978,6 +2978,91 @@ function fcSetPreviewMode(mode) {
     btnDesktop.style.opacity = '1';
     btnMobile.style.opacity = '.5';
   }
+}
+
+function fcLoadDemoData() {
+  if (!confirm('This will overwrite the fields on all tabs with sample content for selling FunnelCraft™ itself (₱2,497). Continue?')) return;
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  const chk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val; };
+
+  // ---- OFFER TAB ----
+  set('f-offer', 'FunnelCraft™ ay isang AI-powered sales funnel generator — isang prompt lang, at makakagawa ka na ng buong multi-page sales funnel (Opt-in, Sales Page, Upsell, Downsell, Thank You, About, Services, FAQ, Contact) bilang isang single HTML file lang, walang monthly fee.');
+  set('f-buyer', 'Mga VAs, freelancers, digital marketers, at small business owners na kailangang gumawa ng sales funnels nang mabilis — pero ayaw magbayad ng monthly SaaS fees o mag-hire ng developer/designer sa bawat launch.');
+  set('f-problem', 'Nag-aaksaya sila ng oras at pera sa mga mahal na funnel builder (₱1,500-₱5,000+/month), o kaya naman nag-hire sila ng freelancer sa bawat sales page na gagawin — at madalas hindi pa rin nakaka-convert yung copy dahil hindi sila professional copywriter.');
+  set('f-transform', 'Makakagawa sila ng buong professional, high-converting sales funnel sa loob ng ilang minuto lang — kasama na ang persuasive copy mula sa AI, ready-made templates, at built-in Philippine payment integration (GCash/Maya/PayMongo) — nang walang monthly fee, walang kailangang mag-code, walang kailangang mag-hire.');
+  set('f-includes', '1. FunnelCraft™ App (isang HTML file, lifetime access)\n2. Quick-Start Setup Guide (video + PDF)\n3. 10 Built-in Sales Page Templates na may live preview\n4. GCash/Maya/PayMongo Payment Integration Guide\n5. License Activation (1 device)\n6. Lifetime Free Updates');
+  set('f-price', '2497');
+  set('f-origprice', '7997');
+  set('f-guarantee', '7-day money-back guarantee — kung hindi mo magamit o hindi nag-work para sa'+'yo, ibabalik namin ang bayad mo.');
+
+  // ---- ASSETS TAB ----
+  set('f-brand', 'Digitera Levi');
+  set('f-product', 'FunnelCraft™');
+  const toneEl = document.getElementById('f-tone');
+  if (toneEl) toneEl.value = 'taglish-bold';
+
+  // ---- PAYMENT TAB ----
+  const directOpt = document.querySelector('.pay-opt[onclick*="\'direct\'"]');
+  if (directOpt) selectPay(directOpt, 'direct');
+  set('pay-val', 'GCash: 0917-XXX-XXXX (Levi Ugaban Mariano)\nMaya: 0917-XXX-XXXX\nAfter paying, send your receipt/screenshot to Messenger: m.me/digiteralevi');
+  set('bump-name', 'Done-For-You Setup Call (30 mins, ako mismo tutulong sa'+'yo mag-set up)');
+  set('bump-price', '497');
+  chk('f-exit-on', true);
+  set('f-exit-headline', 'Sandali lang! Bago ka umalis...');
+  set('f-exit-offer', 'Kunin ang FunnelCraft™ ngayon at makakuha ng extra 10% off gamit ang code SAVE10 sa checkout.');
+  set('f-coupon-code', 'SAVE10');
+  set('f-coupon-message', '10% discount applied! Special price mo: ₱2,247');
+  set('f-bonuses-list', 'Quick-Start Video Walkthrough | 997 | Sunud-sunod na video guide mula setup hanggang unang funnel mo\nPrivate Support Access | 497 | Direktang tanong-sagot kay Levi kung may tanong ka\n10 Bonus Sales Page Templates | 997 | Extra done-for-you templates bukod sa 10 default');
+  set('f-legal-biz', 'Digitera Levi');
+  set('f-legal-email', 'support@digiteralevi.com');
+
+  // ---- FUNNEL TAB ----
+  chk('f-optin-on', true);
+  set('f-optin-magnet', 'Free Mini-Guide: 5 Dapat Malaman Bago Gumawa ng Sales Funnel');
+  set('f-optin-headline', 'Kunin ang libreng guide bago ka bumili');
+
+  chk('f-upsell-on', true);
+  set('f-upsell-name', 'Reseller License — Ibenta Mo Rin Ang FunnelCraft sa Iyong mga Kliyente');
+  set('f-upsell-price', '997');
+  const upsellPayMethod = document.getElementById('f-upsell-paymethod');
+  if (upsellPayMethod) { upsellPayMethod.value = 'manual'; if (typeof fcToggleUpsellPayFields === 'function') fcToggleUpsellPayFields(); }
+  set('f-upsell-gcash', '0917-XXX-XXXX');
+  set('f-upsell-maya', '0917-XXX-XXXX');
+  set('f-upsell-acctname', 'Levi Ugaban Mariano');
+  set('f-upsell-proof-contact', 'm.me/digiteralevi');
+
+  chk('f-downsell-on', true);
+  set('f-downsell-name', 'FunnelCraft™ Lite — Basic Version (walang Reseller License)');
+  set('f-downsell-price', '1497');
+
+  chk('f-thankyou-on', true);
+  set('f-thankyou-delivery', 'Step 1: I-check ang email mo para sa download link ng FunnelCraft™ app\nStep 2: I-download ang HTML file at buksan sa browser mo\nStep 3: Sundan ang Quick-Start Guide para sa unang setup\nStep 4: Sumali sa Private Support group para sa tulong');
+  set('f-thankyou-link', 'https://digiteralevi.github.io/funnelcraft/download');
+
+  chk('f-about-on', true);
+  set('f-about-text', 'Ako si Levi Mariano, ang taga-likha ng Digitera Levi. Ilang taon na akong gumagawa at nagbebenta ng digital products para sa mga Pilipino — mula sa mga simpleng Canva template hanggang sa buong automated business systems. Ginawa ko ang FunnelCraft™ dahil nakita kong marami akong kilalang VA at negosyante ang nag-aaksaya ng oras at pera sa paggawa ng sales page — gusto kong gawing simple ito para sa lahat.');
+
+  chk('f-services-on', true);
+  set('f-services-list', 'AI Sales Funnel Generator (FunnelCraft™)\nFreelance Landing Page Design\nDigital Product Templates (Canva/HTML)');
+
+  chk('f-faq-on', true);
+  set('f-faq-list', 'Kailangan ko ba ng coding skills? | Hindi — form lang ang sasagutan mo, ang AI na ang bahalang gumawa ng buong page.\nMay monthly fee ba? | Wala — isang beses ka lang magbabayad, lifetime access na.\nKailangan ko ba ng sarili kong AI API key? | Oo, pero libre ito mula sa Google AI Studio (Gemini free tier) — may step-by-step guide kami para dito.\nPwede ko bang ibenta ito sa aking mga kliyente? | Oo, kung kukunin mo ang Reseller License upsell.\nSaan ko ma-hho-host ang nagawang funnel? | Kahit saan — GitHub Pages, Netlify, sariling domain — isang HTML file lang siya.');
+
+  chk('f-contact-on', true);
+  set('f-contact-email', 'hello@digiteralevi.com');
+  set('f-contact-messenger', 'm.me/digiteralevi');
+  set('f-social-facebook', 'facebook.com/digiteralevi');
+  set('f-social-instagram', 'instagram.com/digiteralevi');
+  set('f-social-tiktok', 'tiktok.com/@digiteralevi');
+
+  // ---- SHOWCASE TAB ----
+  chk('f-story-on', true);
+  set('f-story-tagline', 'Isang Prompt Lang, Buong Sales Funnel Na');
+  set('f-story-stats', '10 | templates | Ready-to-use designs\n0 | monthly fees | Isang beses lang bayad\n1 | HTML file | Host kahit saan\n5 | minutes | Average build time');
+
+  alert('Demo data loaded! Puntahan mo na lang ang bawat tab para tingnan, tapos click Generate kapag ready ka na.');
+  switchTab('offer');
 }
 
 function dlPage() {
