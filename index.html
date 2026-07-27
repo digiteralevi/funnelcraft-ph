@@ -878,6 +878,10 @@ document.getElementById('fc-optin-form').addEventListener('submit', function(e){
           <div class="lbl">Key Stats (optional — format: Number | Unit | Label, one per line)</div>
           <textarea id="f-story-stats" placeholder="21 | days | Shade-grown&#10;40 | g/hr | Stone-milled&#10;137 | x | Antioxidants&#10;1st | | Harvest"></textarea>
         </div>
+        <div class="field">
+          <div class="lbl">Testimonial (optional — format: Quote | Name / Context, one per line, up to 3)</div>
+          <textarea id="f-story-testimonials" placeholder="This changed everything for me. | Jenna K., Verified Buyer&#10;Best purchase I've made all year. | Marco D., Small Business Owner"></textarea>
+        </div>
 
         <div class="sec-title">Story Page Photos (Optional)</div>
         <p style="font-size:12px;color:var(--muted);line-height:1.6;">Upload photos specifically for this page so it doesn't just repeat your Proof/Samples images. Each block auto-alternates image left/right. If you leave this empty, your Proof/Samples photos will be reused here automatically.</p>
@@ -2303,6 +2307,27 @@ function buildFunnelBundle(salesDoc, cfg) {
   </div>
 </div>` : '';
 
+  const storyTestimonialRows = (cfg.storyTestimonials || '').split('\n').map(l => l.trim()).filter(Boolean).slice(0, 3).map(line => {
+    const [quote, name] = line.split('|').map(s => (s || '').trim());
+    return { quote, name };
+  }).filter(t => t.quote);
+  const storyTestimonialHTML = storyTestimonialRows.length ? `
+<div style="width:100%;text-align:center;padding:56px 24px;">
+  <div style="color:${c.sec};font-size:18px;letter-spacing:3px;margin-bottom:18px;">★★★★★</div>
+  ${storyTestimonialRows.map(t => `
+  <div style="max-width:640px;margin:0 auto 28px;">
+    <p style="${storyHeadFont}font-style:italic;font-weight:600;font-size:clamp(17px,2.2vw,21px);line-height:1.5;margin-bottom:10px;">"${t.quote.replace(/</g,'&lt;')}"</p>
+    ${t.name ? `<div style="${storyBodyFont}font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:.6;">— ${t.name.replace(/</g,'&lt;')}</div>` : ''}
+  </div>`).join('')}
+</div>` : '';
+
+  const storyCtaHTML = `
+<div style="width:100%;text-align:center;background:${panelTint};padding:64px 24px;">
+  <div style="${storyBodyFont}font-size:11px;text-transform:uppercase;letter-spacing:2px;opacity:.6;margin-bottom:14px;">Get Instant Access</div>
+  <h2 style="${storyHeadFont}font-weight:700;font-size:clamp(22px,3.4vw,32px);max-width:640px;margin:0 auto 28px;line-height:1.3;">"${(cfg.offer || cfg.product || '').replace(/</g,'&lt;')}"</h2>
+  <a href="${cfg.ctaHref || '#checkout'}" ${cfg.ctaOnclick || ''} style="display:inline-block;background:${cfg.btnStyle==='outline' ? 'transparent' : c.acc};color:${cfg.btnStyle==='outline' ? c.acc : '#fff'};border:${cfg.btnStyle==='outline' ? `2px solid ${c.acc}` : 'none'};padding:18px 44px;border-radius:${cfg.btnStyle==='pill' ? '999px' : '10px'};font-weight:700;font-size:16px;text-decoration:none;">${cfg.product ? `Get ${cfg.product} Now` : 'Get Instant Access Now'}</a>
+</div>`;
+
   const storyHeroHTML = `
 <div style="width:100%;">
   <div style="max-width:1100px;margin:0 auto;padding:70px 24px 50px;display:flex;flex-wrap:wrap;gap:0;align-items:center;">
@@ -2323,7 +2348,8 @@ function buildFunnelBundle(salesDoc, cfg) {
   ${storyHeroHTML}
   ${storyStatsHTML}
   ${storyBlocks}
-  <div style="height:60px;"></div>
+  ${storyTestimonialHTML}
+  ${storyCtaHTML}
 </div>` : '';
 
   const routerScript = `
@@ -2490,6 +2516,7 @@ async function generate() {
   const storyOn = document.getElementById('f-story-on').checked;
   const storyTagline = document.getElementById('f-story-tagline').value.trim();
   const storyStats = document.getElementById('f-story-stats').value.trim();
+  const storyTestimonials = document.getElementById('f-story-testimonials').value.trim();
 
   if(!offer){ alert(t('alertNoOffer')); switchTab('offer'); return; }
 
@@ -3021,7 +3048,8 @@ function fcShowPayInstructions(){
         thankyouOn, thankyouDelivery, thankyouLink,
         aboutOn, aboutText, servicesOn, servicesList, faqOn, faqList,
         contactOn, contactEmail, contactMessenger, socialFacebook, socialInstagram, socialTiktok, socialYoutube,
-        storyOn, storyTagline, storyStats, proofItems: proofFiltered, storyPhotoItems: storyPhotoFiltered
+        storyOn, storyTagline, storyStats, storyTestimonials, proofItems: proofFiltered, storyPhotoItems: storyPhotoFiltered,
+        price, ctaHref, ctaOnclick
       });
     }
 
@@ -3050,7 +3078,12 @@ const DRAFT_KEY = 'funnelcraft_draft_v1';
 const DRAFT_FIELD_IDS = ['f-offer','f-buyer','f-problem','f-transform','f-includes','f-price','f-origprice',
   'f-guarantee','f-brand','f-product','f-video','f-tone','pay-val','bump-name','bump-price',
   'palette-sel','font-sel','btn-style','f-metapixel','f-ga4','f-tiktokpixel','f-legal-biz','f-legal-email',
-  'c-bg','c-acc','c-sec','c-txt','f-bonuses-list'];
+  'c-bg','c-acc','c-sec','c-txt','f-bonuses-list','f-story-tagline','f-story-stats','f-story-testimonials'];
+
+// Section on/off toggles — these were previously NOT persisted, meaning a saved
+// project could silently forget which sections (Upsell, About, Story, etc.) were enabled.
+const DRAFT_CHECKBOX_IDS = ['f-optin-on','f-upsell-on','f-downsell-on','f-thankyou-on','f-about-on',
+  'f-services-on','f-faq-on','f-contact-on','f-story-on','f-exit-on','f-checkout-form-on'];
 
 function fcCollectFieldData() {
   const data = {};
@@ -3059,6 +3092,10 @@ function fcCollectFieldData() {
     if (el) data[id] = el.value;
   });
   data['f-legal-toggle'] = document.getElementById('f-legal-toggle').checked;
+  DRAFT_CHECKBOX_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.checked;
+  });
   data.selectedPay = selectedPay;
   data.fcTemplateId = fcTemplateId;
   data.fcTemplateAuto = fcTemplateAuto;
@@ -3074,6 +3111,10 @@ function fcApplyFieldData(data) {
     if (el && data[id] !== undefined) el.value = data[id];
   });
   if (data['f-legal-toggle'] !== undefined) document.getElementById('f-legal-toggle').checked = data['f-legal-toggle'];
+  DRAFT_CHECKBOX_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && data[id] !== undefined) el.checked = data[id];
+  });
   if (data.selectedPay) {
     const opt = Array.from(document.querySelectorAll('.pay-opt')).find(o => o.getAttribute('onclick').includes(`'${data.selectedPay}'`));
     if (opt) selectPay(opt, data.selectedPay);
