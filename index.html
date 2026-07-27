@@ -206,7 +206,8 @@ select option{background:#1F1440;}
   <div style="background:var(--bg2);border:1px solid var(--purple-border);max-width:560px;width:100%;max-height:82vh;overflow-y:auto;border-radius:16px;padding:32px;position:relative;">
     <button onclick="fcCloseProjects()" style="position:absolute;top:18px;right:20px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted);">&times;</button>
     <div style="font-size:20px;font-weight:800;color:var(--cream);margin-bottom:6px;">📁 My Projects</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:22px;">Save unlimited separate funnel projects and switch between them anytime — perfect for managing multiple clients or offers.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Save unlimited separate funnel projects and switch between them anytime — perfect for managing multiple clients or offers.</div>
+    <div id="fc-projects-sync-status" style="font-size:11px;color:var(--gold);margin-bottom:16px;">☁️ Checking cloud backup...</div>
 
     <div style="display:flex;gap:8px;margin-bottom:24px;">
       <input type="text" id="fc-project-name-input" placeholder="Name this project (e.g. Client A - Skincare Funnel)" style="flex:1;background:var(--bg3);border:1px solid var(--purple-border);border-radius:9px;padding:12px 14px;font-size:13px;color:var(--cream);outline:none;">
@@ -2863,6 +2864,48 @@ function fcApplyFieldData(data) {
 
 const PROJECTS_KEY = 'funnelcraft_projects_v1';
 
+// ---------- CLOUD PROJECT SYNC ----------
+// Uses the same license key that unlocks the app as the cloud identifier —
+// no separate account/login needed. Falls back to local-only silently if
+// no license key is found or the Worker can't be reached.
+function fcGetLicenseKey() {
+  try {
+    const raw = localStorage.getItem(FC_LICENSE_CACHE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    return data.key || null;
+  } catch(e) { return null; }
+}
+
+async function fcCloudSaveProjects(list) {
+  const key = fcGetLicenseKey();
+  if (!key) return false;
+  try {
+    const res = await fetch(`${FC_LICENSE_WORKER_URL}/projects?key=${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projects: list })
+    });
+    const data = await res.json();
+    return !!data.ok;
+  } catch(e) { return false; }
+}
+
+async function fcCloudLoadProjects() {
+  const key = fcGetLicenseKey();
+  if (!key) return null;
+  try {
+    const res = await fetch(`${FC_LICENSE_WORKER_URL}/projects?key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    return data.ok ? data.projects : null;
+  } catch(e) { return null; }
+}
+
+function fcSetSyncStatus(text) {
+  const el = document.getElementById('fc-projects-sync-status');
+  if (el) el.textContent = text;
+}
+
 function fcGetProjects() {
   try {
     const raw = localStorage.getItem(PROJECTS_KEY);
@@ -2872,11 +2915,23 @@ function fcGetProjects() {
 
 function fcSetProjects(list) {
   localStorage.setItem(PROJECTS_KEY, JSON.stringify(list));
+  fcCloudSaveProjects(list).then(ok => {
+    fcSetSyncStatus(ok ? '☁️ Synced to your account' : (fcGetLicenseKey() ? '⚠️ Saved on this device only — could not reach cloud backup' : 'Saved on this device only (no license key found)'));
+  });
 }
 
-function fcOpenProjects() {
+async function fcOpenProjects() {
   document.getElementById('fc-projects-modal').style.display = 'flex';
+  fcSetSyncStatus(fcGetLicenseKey() ? '☁️ Checking cloud backup...' : 'Saved on this device only (no license key found)');
   fcRenderProjectsList();
+  const cloud = await fcCloudLoadProjects();
+  if (cloud) {
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(cloud));
+    fcSetSyncStatus('☁️ Synced to your account');
+    fcRenderProjectsList();
+  } else if (fcGetLicenseKey()) {
+    fcSetSyncStatus('⚠️ Could not reach cloud backup — showing saves on this device only');
+  }
 }
 
 function fcCloseProjects() {
