@@ -1694,6 +1694,34 @@ function uploadSingle(evt, zoneId, imgId, type) {
   reader.readAsDataURL(file);
 }
 
+// Resizes/compresses an uploaded image before storing it as base64 — keeps
+// localStorage and cloud-sync payloads small, and makes generated funnel
+// HTML files lighter/faster too.
+function fcCompressImage(file, maxDim = 1400, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+          else { width = Math.round(width * (maxDim / height)); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(e.target.result); // fall back to original if resize fails
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function addSlot() {
   const idx = galleryItems.length;
   galleryItems.push({src:'',name:''});
@@ -1713,17 +1741,14 @@ function addSlot() {
   document.getElementById('gallery-grid').appendChild(wrap);
 }
 
-function uploadGal(evt, idx) {
+async function uploadGal(evt, idx) {
   const file = evt.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    galleryItems[idx].src = e.target.result;
-    const slot = document.getElementById(`gs-${idx}`);
-    const img = document.getElementById(`gi-${idx}`);
-    img.src = e.target.result; img.style.display='block';
-    slot.classList.add('has-img');
-  };
-  reader.readAsDataURL(file);
+  const dataUrl = await fcCompressImage(file);
+  galleryItems[idx].src = dataUrl;
+  const slot = document.getElementById(`gs-${idx}`);
+  const img = document.getElementById(`gi-${idx}`);
+  img.src = dataUrl; img.style.display='block';
+  slot.classList.add('has-img');
 }
 
 function addProofBlock() {
@@ -1752,17 +1777,14 @@ function addProofBlock() {
   document.getElementById('proof-blocks').appendChild(wrap);
 }
 
-function uploadProofImg(evt, idx) {
+async function uploadProofImg(evt, idx) {
   const file = evt.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    proofItems[idx].src = e.target.result;
-    const slot = document.getElementById(`ps-${idx}`);
-    const img = document.getElementById(`pi-${idx}`);
-    img.src = e.target.result; img.style.display='block';
-    slot.classList.add('has-img');
-  };
-  reader.readAsDataURL(file);
+  const dataUrl = await fcCompressImage(file);
+  proofItems[idx].src = dataUrl;
+  const slot = document.getElementById(`ps-${idx}`);
+  const img = document.getElementById(`pi-${idx}`);
+  img.src = dataUrl; img.style.display='block';
+  slot.classList.add('has-img');
 }
 
 function toggleProofSwap(idx) {
@@ -1779,6 +1801,48 @@ function toggleProofSwap(idx) {
     btn.style.borderColor = 'rgba(255,255,255,0.15)';
     btn.textContent = '⇄ Flip Side';
   }
+}
+
+// ---------- Rebuild image galleries when loading a saved project/draft ----------
+function fcRebuildGallerySlots(items) {
+  galleryItems = [];
+  document.getElementById('gallery-grid').innerHTML = '';
+  if (!items || items.length === 0) { addSlot(); addSlot(); addSlot(); return; }
+  items.forEach(item => {
+    addSlot();
+    const idx = galleryItems.length - 1;
+    galleryItems[idx] = { src: item.src || '', name: item.name || '' };
+    if (item.src) {
+      document.getElementById(`gi-${idx}`).src = item.src;
+      document.getElementById(`gi-${idx}`).style.display = 'block';
+      document.getElementById(`gs-${idx}`).classList.add('has-img');
+    }
+    if (item.name) document.getElementById(`gn-${idx}`).value = item.name;
+  });
+}
+
+function fcRebuildProofBlocks(items) {
+  proofItems = [];
+  document.getElementById('proof-blocks').innerHTML = '';
+  if (!items || items.length === 0) return;
+  items.forEach(item => {
+    addProofBlock();
+    const idx = proofItems.length - 1;
+    proofItems[idx] = { src: item.src || '', headline: item.headline || '', desc: item.desc || '', swap: false };
+    const wrap = document.getElementById(`proof-wrap-${idx}`);
+    if (item.src) {
+      document.getElementById(`pi-${idx}`).src = item.src;
+      document.getElementById(`pi-${idx}`).style.display = 'block';
+      document.getElementById(`ps-${idx}`).classList.add('has-img');
+    }
+    if (wrap) {
+      const headlineInput = wrap.querySelector('input[type="text"]');
+      const descInput = wrap.querySelector('textarea');
+      if (headlineInput) headlineInput.value = item.headline || '';
+      if (descInput) descInput.value = item.desc || '';
+    }
+    if (item.swap) toggleProofSwap(idx);
+  });
 }
 
 function removeProofBlock(idx) {
@@ -2837,6 +2901,8 @@ function fcCollectFieldData() {
   data.selectedPay = selectedPay;
   data.fcTemplateId = fcTemplateId;
   data.fcTemplateAuto = fcTemplateAuto;
+  data.galleryItems = galleryItems.filter(g => g && g.src);
+  data.proofItems = proofItems.filter(p => p && p.src);
   return data;
 }
 
@@ -2860,6 +2926,8 @@ function fcApplyFieldData(data) {
       document.getElementById('tpl-hint').textContent = "✨ Auto-pick is ON — FunnelCraft will choose the best template when you click Generate.";
     }
   }
+  fcRebuildGallerySlots(data.galleryItems || []);
+  fcRebuildProofBlocks(data.proofItems || []);
 }
 
 const PROJECTS_KEY = 'funnelcraft_projects_v1';
