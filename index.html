@@ -1754,26 +1754,24 @@ async function suggest(field) {
   btns.forEach(b=>b.disabled=false);
 }
 
-function uploadSingle(evt, zoneId, imgId, type) {
+async function uploadSingle(evt, zoneId, imgId, type) {
   const file = evt.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const zone = document.getElementById(zoneId);
-    const img = document.getElementById(imgId);
-    img.src = e.target.result; img.style.display='block';
-    zone.classList.add('has-img');
-    if(type==='hero') heroB64 = e.target.result;
-    if(type==='logo') logoB64 = e.target.result;
-    if(type==='about') aboutB64 = e.target.result;
-    if(type==='payqr') payqrB64 = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  const format = type === 'logo' ? 'image/png' : 'image/jpeg';
+  const dataUrl = await fcCompressImage(file, 1400, 0.85, format);
+  const zone = document.getElementById(zoneId);
+  const img = document.getElementById(imgId);
+  img.src = dataUrl; img.style.display='block';
+  zone.classList.add('has-img');
+  if(type==='hero') heroB64 = dataUrl;
+  if(type==='logo') logoB64 = dataUrl;
+  if(type==='about') aboutB64 = dataUrl;
+  if(type==='payqr') payqrB64 = dataUrl;
 }
 
 // Resizes/compresses an uploaded image before storing it as base64 — keeps
 // localStorage and cloud-sync payloads small, and makes generated funnel
 // HTML files lighter/faster too.
-function fcCompressImage(file, maxDim = 1400, quality = 0.82) {
+function fcCompressImage(file, maxDim = 1400, quality = 0.82, format = 'image/jpeg') {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -1788,7 +1786,7 @@ function fcCompressImage(file, maxDim = 1400, quality = 0.82) {
         canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        resolve(format === 'image/png' ? canvas.toDataURL('image/png') : canvas.toDataURL(format, quality));
       };
       img.onerror = () => resolve(e.target.result); // fall back to original if resize fails
       img.src = e.target.result;
@@ -2416,7 +2414,7 @@ function fcBuildGalleryHTML(items) {
     rowsHTML += `<div style="display:flex;justify-content:center;gap:16px;margin-bottom:16px;">${
       row.map((g, j) => {
         const idx = i + j;
-        return `<div style="flex:1 1 0;max-width:240px;text-align:center;background:rgba(128,128,128,0.06);border-radius:16px;padding:10px 10px 14px;border:1px solid rgba(128,128,128,0.14);box-shadow:0 10px 28px rgba(0,0,0,0.16);"><img src="__GALLERY_IMG_${idx}__" alt="${g.name}" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;border-radius:10px;"><div style="font-size:13px;font-weight:600;margin-top:10px;">${g.name}</div></div>`;
+        return `<div style="flex:1 1 0;max-width:240px;text-align:center;background:rgba(128,128,128,0.06);border-radius:16px;padding:10px 10px 14px;border:1px solid rgba(128,128,128,0.14);box-shadow:0 10px 28px rgba(0,0,0,0.16);"><img src="__GALLERY_IMG_${idx}__" alt="${g.name}" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;border-radius:10px;mask-image:linear-gradient(to bottom,black 80%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,black 80%,transparent 100%);"><div style="font-size:13px;font-weight:600;margin-top:10px;">${g.name}</div></div>`;
       }).join('')
     }</div>`;
   }
@@ -2740,6 +2738,10 @@ LUXURY EDITORIAL MODE — this changes the visual execution, NOT the conversion 
 ` : ''}
 LAYOUT RULE FOR CARD GRIDS (bullets, features, "who this is for", etc.): use display:flex;flex-wrap:wrap;justify-content:center; with each card at a fixed width (e.g. flex:0 1 300px;) — NEVER use CSS grid with a fixed column count for these, because when the item count doesn't divide evenly (e.g. 5 items in 3 columns), it leaves an orphaned, awkwardly-aligned item on the last row. Flex-wrap with justify-content:center naturally centers any leftover items instead. Give every card real visual presence so it doesn't look like plain pasted text/images on the background: a soft background tint (e.g. rgba(128,128,128,0.06) on dark themes, or a lightly tinted white on light themes), border-radius 14-16px, a subtle 1px border (rgba(128,128,128,0.14)), and a soft box-shadow (e.g. 0 10px 28px rgba(0,0,0,0.16)) — the card should read as a distinct, slightly elevated surface, not just an outline.
 
+PREMIUM PHOTO TREATMENT: Whenever you place a large photo or screenshot next to or behind text — feature showcases, "see it in action" sections, before/after, customization examples, anything beyond a small icon-sized image — do NOT put it in a hard-edged box or device frame with a visible rectangular border. Instead soften the edge so it blends into the surrounding background, using this exact technique on the image itself:
+<img src="[image]" style="...;mask-image:linear-gradient(to right,black 75%,transparent 100%);-webkit-mask-image:linear-gradient(to right,black 75%,transparent 100%);">
+Flip the direction (to left / to right / to bottom / to top) based on which edge of the image sits closest to the text or page edge it should fade toward — the edge nearest the text fades out, the opposite edge stays sharp. This is a required, recurring visual signature for this page, not an occasional flourish — use it consistently everywhere a large photo appears, matching the treatment already used on the Product Story page images.
+
 SEO (write these into the <head>, they are part of the required output, not optional):
 - <title>: a specific, keyword-rich title under 60 characters combining the product/brand name and its core benefit — never a generic placeholder like "Sales Page".
 - <meta name="description" content="..."> : 140-160 characters, written as compelling ad copy that states the core benefit and includes a soft call to action. Base it on the actual offer described below, never generic filler.
@@ -3021,10 +3023,12 @@ function fcShowPayInstructions(){
 </div>
 <script>
 (function(){
-  var shown = false;
+  var shown = false, armed = false, moved = false;
+  document.addEventListener('mousemove', function(){ moved = true; }, {once:true});
+  setTimeout(function(){ armed = true; }, 4000);
   document.addEventListener('mouseout', function(e){
-    if (shown) return;
-    if (e.clientY <= 0 || (e.relatedTarget === null && e.clientY < 10)) {
+    if (shown || !armed || !moved) return;
+    if (e.clientY <= 0 && e.relatedTarget === null) {
       shown = true;
       var m = document.getElementById('fc-exit-modal');
       if (m) m.style.display = 'flex';
@@ -3076,9 +3080,17 @@ function fcShowPayInstructions(){
 
 const DRAFT_KEY = 'funnelcraft_draft_v1';
 const DRAFT_FIELD_IDS = ['f-offer','f-buyer','f-problem','f-transform','f-includes','f-price','f-origprice',
-  'f-guarantee','f-brand','f-product','f-video','f-tone','pay-val','bump-name','bump-price',
+  'f-guarantee','f-brand','f-product','f-video','f-tone','pay-val','bump-name','bump-price','bump-bundle-link',
   'palette-sel','font-sel','btn-style','f-metapixel','f-ga4','f-tiktokpixel','f-legal-biz','f-legal-email',
-  'c-bg','c-acc','c-sec','c-txt','f-bonuses-list','f-story-tagline','f-story-stats','f-story-testimonials'];
+  'c-bg','c-acc','c-sec','c-txt','f-bonuses-list','f-story-tagline','f-story-stats','f-story-testimonials',
+  'f-deadline','f-og-image','f-coupon-code','f-coupon-message','f-exit-headline','f-exit-offer',
+  'f-optin-magnet','f-optin-headline','f-optin-embed',
+  'f-upsell-name','f-upsell-price','f-upsell-paymethod','f-upsell-payval','f-upsell-gcash','f-upsell-maya',
+  'f-upsell-acctname','f-upsell-proof-contact','f-upsell-instructions',
+  'f-downsell-name','f-downsell-price','f-downsell-payval',
+  'f-thankyou-delivery','f-thankyou-link',
+  'f-about-text','f-services-list','f-faq-list',
+  'f-contact-email','f-contact-messenger','f-social-facebook','f-social-instagram','f-social-tiktok','f-social-youtube'];
 
 // Section on/off toggles — these were previously NOT persisted, meaning a saved
 // project could silently forget which sections (Upsell, About, Story, etc.) were enabled.
@@ -3102,6 +3114,7 @@ function fcCollectFieldData() {
   data.galleryItems = galleryItems.filter(g => g && g.src);
   data.proofItems = proofItems.filter(p => p && p.src);
   data.storyPhotoItems = storyPhotoItems.filter(p => p && p.src);
+  data.heroB64 = heroB64; data.logoB64 = logoB64; data.aboutB64 = aboutB64; data.payqrB64 = payqrB64;
   return data;
 }
 
@@ -3110,6 +3123,7 @@ function fcApplyFieldData(data) {
     const el = document.getElementById(id);
     if (el && data[id] !== undefined) el.value = data[id];
   });
+  if (typeof fcToggleUpsellPayFields === 'function') fcToggleUpsellPayFields();
   if (data['f-legal-toggle'] !== undefined) document.getElementById('f-legal-toggle').checked = data['f-legal-toggle'];
   DRAFT_CHECKBOX_IDS.forEach(id => {
     const el = document.getElementById(id);
@@ -3132,6 +3146,23 @@ function fcApplyFieldData(data) {
   fcRebuildGallerySlots(data.galleryItems || []);
   fcRebuildProofBlocks(data.proofItems || []);
   fcRebuildStoryPhotoBlocks(data.storyPhotoItems || []);
+  fcRebuildSingleImage('hero-zone', 'hero-img', data.heroB64); heroB64 = data.heroB64 || '';
+  fcRebuildSingleImage('logo-zone', 'logo-img', data.logoB64); logoB64 = data.logoB64 || '';
+  fcRebuildSingleImage('about-zone', 'about-img', data.aboutB64); aboutB64 = data.aboutB64 || '';
+  fcRebuildSingleImage('payqr-zone', 'payqr-img', data.payqrB64); payqrB64 = data.payqrB64 || '';
+}
+
+function fcRebuildSingleImage(zoneId, imgId, dataUrl) {
+  const zone = document.getElementById(zoneId);
+  const img = document.getElementById(imgId);
+  if (!zone || !img) return;
+  if (dataUrl) {
+    img.src = dataUrl; img.style.display = 'block';
+    zone.classList.add('has-img');
+  } else {
+    img.src = ''; img.style.display = 'none';
+    zone.classList.remove('has-img');
+  }
 }
 
 const PROJECTS_KEY = 'funnelcraft_projects_v1';
