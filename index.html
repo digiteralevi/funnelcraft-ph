@@ -216,6 +216,10 @@ select option{background:#1F1440;}
 
     <div id="fc-projects-list" style="display:flex;flex-direction:column;gap:10px;"></div>
     <div id="fc-projects-empty" style="text-align:center;color:var(--muted);font-size:13px;padding:30px 0;display:none;">No saved projects yet — fill out the form, then click "Save Current" to create your first one.</div>
+    <div style="border-top:1px solid var(--purple-border);margin-top:20px;padding-top:16px;text-align:center;">
+      <button onclick="fcClearAllSavedData()" style="background:transparent;border:1px solid rgba(220,120,120,0.4);color:#e88;font-size:12px;padding:8px 14px;border-radius:7px;cursor:pointer;">🗑️ Clear All Saved Projects (This Device + Cloud)</button>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px;">Use this if a saved project looks corrupted or shows wrong data in the wrong fields — this wipes everything so you can start fresh.</p>
+    </div>
   </div>
 </div>
 
@@ -3120,10 +3124,20 @@ function fcCollectFieldData() {
   return data;
 }
 
+const SCRIPT_ONLY_FIELD_IDS = ['f-metapixel','f-ga4','f-tiktokpixel','f-optin-embed'];
+
 function fcApplyFieldData(data) {
   DRAFT_FIELD_IDS.forEach(id => {
     const el = document.getElementById(id);
-    if (el && data[id] !== undefined) el.value = data[id];
+    if (!el || data[id] === undefined) return;
+    const val = data[id];
+    // Safety guard: never let raw tracking-script/embed code land in a field that isn't meant for it —
+    // this is exactly the kind of cross-field corruption that can happen with a stale/old saved project.
+    if (typeof val === 'string' && /<script|!function\(f,b,e,v,n,t,s\)/i.test(val) && !SCRIPT_ONLY_FIELD_IDS.includes(id)) {
+      console.warn(`FunnelCraft: skipped restoring "${id}" — the saved value looked like tracking script code, which doesn't belong there. This usually means the saved project is from an old app version.`);
+      return;
+    }
+    el.value = val;
   });
   if (typeof fcToggleUpsellPayFields === 'function') fcToggleUpsellPayFields();
   if (data['f-legal-toggle'] !== undefined) document.getElementById('f-legal-toggle').checked = data['f-legal-toggle'];
@@ -3241,6 +3255,16 @@ async function fcOpenProjects() {
 
 function fcCloseProjects() {
   document.getElementById('fc-projects-modal').style.display = 'none';
+}
+
+function fcClearAllSavedData() {
+  if (!confirm('This will permanently delete ALL saved projects on this device AND in the cloud (for this license key). This cannot be undone. Continue?')) return;
+  localStorage.removeItem(PROJECTS_KEY);
+  localStorage.removeItem(DRAFT_KEY);
+  fcCloudSaveProjects([]).then(() => {
+    fcSetSyncStatus('🗑️ All saved projects cleared.');
+    fcRenderProjectsList();
+  });
 }
 
 function fcSaveNewProject() {
