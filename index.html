@@ -2419,7 +2419,7 @@ function fcBuildGalleryHTML(items) {
     rowsHTML += `<div style="display:flex;justify-content:center;gap:16px;margin-bottom:16px;">${
       row.map((g, j) => {
         const idx = i + j;
-        return `<div style="flex:1 1 0;max-width:240px;text-align:center;background:rgba(128,128,128,0.06);border-radius:16px;padding:10px 10px 14px;border:1px solid rgba(128,128,128,0.14);box-shadow:0 10px 28px rgba(0,0,0,0.16);"><img src="__GALLERY_IMG_${idx}__" alt="${g.name}" style="width:100%;aspect-ratio:1/1;object-fit:cover;display:block;border-radius:10px;mask-image:linear-gradient(to bottom,black 80%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,black 80%,transparent 100%);"><div style="font-size:13px;font-weight:600;margin-top:10px;">${g.name}</div></div>`;
+        return `<div style="flex:1 1 0;max-width:240px;text-align:center;background:rgba(128,128,128,0.06);border-radius:16px;padding:10px 10px 14px;border:1px solid rgba(128,128,128,0.14);box-shadow:0 10px 28px rgba(0,0,0,0.16);"><img src="__GALLERY_IMG_${idx}__" alt="${g.name}" style="width:100%;aspect-ratio:4/3;object-fit:contain;display:block;border-radius:10px;mask-image:linear-gradient(to bottom,black 88%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,black 88%,transparent 100%);"><div style="font-size:13px;font-weight:600;margin-top:10px;">${g.name}</div></div>`;
       }).join('')
     }</div>`;
   }
@@ -2596,7 +2596,8 @@ async function generate() {
     // Default alternation: block 0 = image right, block 1 = image left, block 2 = image right, etc.
     // A manual "swap" flips that specific block's default.
     const imageOnRight = (i % 2 === 0) !== p.swap;
-    const imgDiv = `<div style="flex:1 1 280px;min-width:0;"><img src="__PROOF_IMG_${i}__" alt="${(p.headline||'').replace(/"/g,'&quot;')}" style="width:100%;border-radius:12px;display:block;"></div>`;
+    const fadeDir = imageOnRight ? 'to left' : 'to right'; // fade the edge nearest the text
+    const imgDiv = `<div style="flex:1 1 280px;min-width:0;"><img src="__PROOF_IMG_${i}__" alt="${(p.headline||'').replace(/"/g,'&quot;')}" style="width:100%;border-radius:12px;display:block;mask-image:linear-gradient(${fadeDir},black 78%,transparent 100%);-webkit-mask-image:linear-gradient(${fadeDir},black 78%,transparent 100%);"></div>`;
     const textDiv = `<div style="flex:1 1 280px;min-width:0;display:flex;flex-direction:column;justify-content:center;">${p.headline ? `<h3 style="font-size:20px;margin-bottom:10px;">${p.headline.replace(/</g,'&lt;')}</h3>` : ''}${p.desc ? `<p style="opacity:.8;line-height:1.6;">${p.desc.replace(/</g,'&lt;')}</p>` : ''}</div>`;
     return `<div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center;margin:32px 0;">${imageOnRight ? textDiv + imgDiv : imgDiv + textDiv}</div>`;
   }).join('') : '';
@@ -3126,11 +3127,16 @@ function fcCollectFieldData() {
 
 const SCRIPT_ONLY_FIELD_IDS = ['f-metapixel','f-ga4','f-tiktokpixel','f-optin-embed'];
 
+const PRESERVE_DEFAULT_IF_EMPTY_IDS = ['f-optin-embed'];
+
 function fcApplyFieldData(data) {
   DRAFT_FIELD_IDS.forEach(id => {
     const el = document.getElementById(id);
     if (!el || data[id] === undefined) return;
     const val = data[id];
+    // Never let an old saved EMPTY value wipe out a field's built-in default template
+    // (e.g. the ready-made opt-in form code) — an empty save just means "no custom edit yet."
+    if (val === '' && PRESERVE_DEFAULT_IF_EMPTY_IDS.includes(id)) return;
     // Safety guard: never let raw tracking-script/embed code land in a field that isn't meant for it —
     // this is exactly the kind of cross-field corruption that can happen with a stale/old saved project.
     if (typeof val === 'string' && /<script|!function\(f,b,e,v,n,t,s\)/i.test(val) && !SCRIPT_ONLY_FIELD_IDS.includes(id)) {
