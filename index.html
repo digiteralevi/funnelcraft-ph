@@ -389,6 +389,15 @@ select option{background:#1F1440;}
         </div>
 
         <div class="field">
+          <div class="lbl">What kind of photo is this?</div>
+          <select id="f-hero-img-type">
+            <option value="portrait">Portrait photo of a person (adds a soft glow + blended edge — best for Split Hero / Centered Stack)</option>
+            <option value="mockup">Screenshot, device mockup, or product shot (clean edges, no glow — best for everything else)</option>
+          </select>
+          <p style="font-size:11px;color:var(--muted);margin-top:4px;">This changes how your Hero Image is styled. Get this wrong and a screenshot can end up with an odd blurry glow around it, or a portrait can look flatly cropped — pick whichever actually matches what you uploaded.</p>
+        </div>
+
+        <div class="field">
           <div class="lbl" data-i18n="lblLogo">Brand Logo</div>
           <div class="upload-zone" id="logo-zone">
             <input type="file" accept="image/*" onchange="uploadSingle(event,'logo-zone','logo-img','logo')">
@@ -2552,10 +2561,17 @@ async function generate() {
     ? `<img src="__LOGO_IMG__" alt="${brand} logo" style="height:44px;object-fit:contain;">`
     : `<span style="font-family:serif;font-size:22px;font-weight:900;">${brand}</span>`;
 
+  const heroImgType = document.getElementById('f-hero-img-type').value;
   const glowColor = colors.sec || colors.acc || '#D4A843';
-  const heroImgInner = `<img src="__HERO_IMG__" alt="${product}" style="${activeTemplate.heroImgStyle || 'width:100%;max-width:820px;border-radius:14px;margin:28px auto 0;display:block;'}">`;
+  // For mockup/screenshot/product photos, strip the mask-image blend and use a plain clean cover
+  // (the blend/glow treatment is designed for portrait photos of people and looks wrong on a screenshot).
+  const heroFitStyle = heroImgType === 'mockup'
+    ? (activeTemplate.heroImgStyle || '').replace(/mask-image:[^;]+;?/gi, '').replace(/-webkit-mask-image:[^;]+;?/gi, '')
+    : (activeTemplate.heroImgStyle || 'width:100%;max-width:820px;border-radius:14px;margin:28px auto 0;display:block;');
+  const useGlow = activeTemplate.heroGlow && heroImgType === 'portrait';
+  const heroImgInner = `<img src="__HERO_IMG__" alt="${product}" style="${heroFitStyle}">`;
   const heroImgHTML = heroB64
-    ? (activeTemplate.heroGlow
+    ? (useGlow
         ? `<div style="position:relative;width:100%;height:100%;">
              <div style="position:absolute;inset:-15%;background:radial-gradient(circle at 45% 40%,${glowColor} 0%,transparent 68%);filter:blur(50px);opacity:.55;z-index:0;pointer-events:none;"></div>
              <div style="position:relative;z-index:1;width:100%;height:100%;">${heroImgInner}</div>
@@ -3099,7 +3115,7 @@ const DRAFT_FIELD_IDS = ['f-offer','f-buyer','f-problem','f-transform','f-includ
   'f-guarantee','f-brand','f-product','f-video','f-tone','pay-val','bump-name','bump-price','bump-bundle-link',
   'palette-sel','font-sel','btn-style','f-metapixel','f-ga4','f-tiktokpixel','f-legal-biz','f-legal-email',
   'c-bg','c-acc','c-sec','c-txt','f-bonuses-list','f-story-tagline','f-story-stats','f-story-testimonials',
-  'f-deadline','f-og-image','f-coupon-code','f-coupon-message','f-exit-headline','f-exit-offer',
+  'f-deadline','f-og-image','f-coupon-code','f-coupon-message','f-exit-headline','f-exit-offer','f-hero-img-type',
   'f-optin-magnet','f-optin-headline','f-optin-embed',
   'f-upsell-name','f-upsell-price','f-upsell-paymethod','f-upsell-payval','f-upsell-gcash','f-upsell-maya',
   'f-upsell-acctname','f-upsell-proof-contact','f-upsell-instructions',
