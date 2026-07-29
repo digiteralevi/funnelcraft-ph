@@ -1238,6 +1238,7 @@ const TEMPLATES = {
     desc: 'Image left, bold headline right. The all-purpose direct-response classic.',
     keywords: [],
     heroImgStyle: 'width:100%;height:100%;object-fit:cover;display:block;mask-image:linear-gradient(to right,black 82%,transparent 100%);-webkit-mask-image:linear-gradient(to right,black 82%,transparent 100%);',
+    heroGlow: true,
     structuralHint: `TEMPLATE — SPLIT HERO: Build the Hero section (PAGE SECTIONS item 2) using this EXACT container structure, with the HERO IMAGE block (provided below, inject as-is — it already has a soft blended edge baked in, do not add your own border/frame/padding around it) placed inside the first column and your headline/subhead/CTA content inside the second:
 <div style="display:flex;flex-wrap:wrap;align-items:stretch;min-height:520px;">
   <div style="flex:1 1 480px;min-width:280px;display:flex;">[HERO IMAGE block goes here — it must fill this entire column edge-to-edge, full height, no gaps, no cropping to a smaller size]</div>
@@ -1280,6 +1281,7 @@ Copy should read like a feature story/press piece rather than a typical sales pa
     desc: 'Centered circular photo, headline, subhead — personal and warm. Great for coaches.',
     keywords: ['coach','coaching','mentor','personal brand','1:1','mindset','consultant','speaker'],
     heroImgStyle: 'width:100%;height:100%;object-fit:cover;display:block;',
+    heroGlow: true,
     structuralHint: `TEMPLATE — CENTERED STACK: Build the Hero fully centered with a narrow max-width, using this EXACT structure for the photo — the HERO IMAGE block (provided below, inject as-is) goes inside the circular frame div:
 <div style="text-align:center;max-width:640px;margin:0 auto;padding:64px 24px 40px;">
   <div style="width:180px;height:180px;border-radius:50%;overflow:hidden;margin:0 auto 24px;box-shadow:0 12px 40px rgba(0,0,0,0.25);">[HERO IMAGE block goes here]</div>
@@ -2550,8 +2552,15 @@ async function generate() {
     ? `<img src="__LOGO_IMG__" alt="${brand} logo" style="height:44px;object-fit:contain;">`
     : `<span style="font-family:serif;font-size:22px;font-weight:900;">${brand}</span>`;
 
+  const glowColor = colors.sec || colors.acc || '#D4A843';
+  const heroImgInner = `<img src="__HERO_IMG__" alt="${product}" style="${activeTemplate.heroImgStyle || 'width:100%;max-width:820px;border-radius:14px;margin:28px auto 0;display:block;'}">`;
   const heroImgHTML = heroB64
-    ? `<img src="__HERO_IMG__" alt="${product}" style="${activeTemplate.heroImgStyle || 'width:100%;max-width:820px;border-radius:14px;margin:28px auto 0;display:block;'}">`
+    ? (activeTemplate.heroGlow
+        ? `<div style="position:relative;width:100%;height:100%;">
+             <div style="position:absolute;inset:-15%;background:radial-gradient(circle at 45% 40%,${glowColor} 0%,transparent 68%);filter:blur(50px);opacity:.55;z-index:0;pointer-events:none;"></div>
+             <div style="position:relative;z-index:1;width:100%;height:100%;">${heroImgInner}</div>
+           </div>`
+        : heroImgInner)
     : '';
 
   const videoHTML = video
