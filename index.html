@@ -1772,13 +1772,11 @@ async function suggest(field) {
 
 async function uploadSingle(evt, zoneId, imgId, type) {
   const file = evt.target.files[0]; if(!file) return;
-  let format = type === 'logo' ? 'image/png' : 'image/jpeg';
-  if (type === 'hero') {
-    const heroTypeEl = document.getElementById('f-hero-img-type');
-    // Mockups/screenshots often rely on a transparent background — JPEG has no
-    // transparency support and would fill it in solid black, so use PNG for those.
-    if (heroTypeEl && heroTypeEl.value === 'mockup') format = 'image/png';
-  }
+  // Always use PNG — it safely preserves transparency when present and works fine
+  // for fully opaque images too. JPEG has no alpha channel and silently fills any
+  // transparent area with solid black, which was causing images to lose their
+  // transparent background regardless of which hero image type was selected.
+  const format = 'image/png';
   const dataUrl = await fcCompressImage(file, 1400, 0.85, format);
   const zone = document.getElementById(zoneId);
   const img = document.getElementById(imgId);
@@ -1877,7 +1875,7 @@ function addProofBlock() {
 
 async function uploadProofImg(evt, idx) {
   const file = evt.target.files[0]; if(!file) return;
-  const dataUrl = await fcCompressImage(file);
+  const dataUrl = await fcCompressImage(file, 1400, 0.85, 'image/png');
   proofItems[idx].src = dataUrl;
   const slot = document.getElementById(`ps-${idx}`);
   const img = document.getElementById(`pi-${idx}`);
@@ -1978,7 +1976,7 @@ function addStoryPhotoBlock() {
 
 async function uploadStoryPhotoImg(evt, idx) {
   const file = evt.target.files[0]; if(!file) return;
-  const dataUrl = await fcCompressImage(file);
+  const dataUrl = await fcCompressImage(file, 1400, 0.85, 'image/png');
   storyPhotoItems[idx].src = dataUrl;
   const slot = document.getElementById(`sps-${idx}`);
   const img = document.getElementById(`spi-${idx}`);
