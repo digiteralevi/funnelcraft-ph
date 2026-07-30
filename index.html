@@ -2193,7 +2193,7 @@ function buildFunnelBundle(salesDoc, cfg) {
       <p style="margin:14px 0 0;opacity:.8;font-size:14px;white-space:pre-line;">${upsellInstructionsText}</p>
     </div>
     <a href="${messengerLink}" target="_blank" rel="noopener" style="display:inline-block;padding:16px 32px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;font-size:16px;margin-bottom:14px;">Send My Payment Proof →</a><br>`;
-  const upsellLinkBlock = `<a href="${cfg.upsellPayVal || '#thankyou'}" style="display:inline-block;padding:16px 32px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;font-size:16px;margin-bottom:14px;">Yes! Add ${cfg.upsellName} →</a><br>`;
+  const upsellLinkBlock = `<a href="${cfg.upsellPayVal || '#thankyou'}" target="_blank" rel="noopener" style="display:inline-block;padding:16px 32px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;font-size:16px;margin-bottom:14px;">Yes! Add ${cfg.upsellName} →</a><br>`;
 
   const upsellSection = cfg.upsellOn ? `
 <div id="fc-page-upsell" class="fc-page" data-display="flex" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};display:flex;align-items:center;justify-content:center;padding:24px;">
@@ -2212,7 +2212,7 @@ function buildFunnelBundle(salesDoc, cfg) {
     <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${c.sec};margin-bottom:14px;">One Last Thing...</div>
     <h1 style="font-size:clamp(26px,4.5vw,38px);line-height:1.2;margin-bottom:16px;">How about ${cfg.downsellName} for just ${cfg.downsellPrice} instead?</h1>
     <p style="opacity:.75;margin-bottom:28px;">A smaller way to get started — no pressure either way.</p>
-    <a href="${cfg.downsellPayVal || '#thankyou'}" style="display:inline-block;padding:16px 32px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;font-size:16px;margin-bottom:14px;">Yes, Add ${cfg.downsellName} →</a><br>
+    <a href="${cfg.downsellPayVal || '#thankyou'}" target="_blank" rel="noopener" style="display:inline-block;padding:16px 32px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;font-size:16px;margin-bottom:14px;">Yes, Add ${cfg.downsellName} →</a><br>
     <a href="#thankyou" style="color:${c.txt};opacity:.5;font-size:13px;text-decoration:underline;">No thanks, take me to my order</a>
   </div>
 </div>` : '';
@@ -2223,7 +2223,7 @@ function buildFunnelBundle(salesDoc, cfg) {
     <div style="font-size:40px;margin-bottom:14px;">✅</div>
     <h1 style="font-size:clamp(26px,4.5vw,36px);margin-bottom:20px;">You're all set!</h1>
     <div style="text-align:left;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px 28px;margin-bottom:24px;opacity:.9;line-height:1.8;white-space:pre-line;font-size:15px;">${cfg.thankyouDelivery}</div>
-    ${cfg.thankyouLink ? `<a href="${cfg.thankyouLink}" style="display:inline-block;padding:15px 30px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;">Access It Now →</a>` : ''}
+    ${cfg.thankyouLink ? `<a href="${cfg.thankyouLink}" target="_blank" rel="noopener" style="display:inline-block;padding:15px 30px;border-radius:8px;background:${c.acc};color:#fff;font-weight:700;text-decoration:none;">Access It Now →</a>` : ''}
   </div>
 </div>` : '';
 
@@ -2757,7 +2757,7 @@ fcUpdateCalc();
     const saveFetchJs = appsScriptUrl
       ? `fetch(${fcAttrSafe(JSON.stringify(appsScriptUrl))},{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({email:em,source:${fcAttrSafe(JSON.stringify(product))}+' (checkout: '+nm+')'})}).catch(function(){});`
       : '';
-    ctaOnclick = `onclick="if(typeof fcTrackEvent==='function'){fcTrackEvent('InitiateCheckout');}var b=document.getElementById('fc-bump-checkbox');var bp=b&&b.checked;var ne=document.getElementById('fc-checkout-name');var ee=document.getElementById('fc-checkout-email');if(ne&&ee){var nm=ne.value.trim();var em=ee.value.trim();if(!nm||!em){alert(${fcAttrSafe(JSON.stringify(validationMsg))});return false;}${saveFetchJs}}${messengerPart}var h=bp?${bundleHrefJs}:${baseHrefJs};${directCallJs}if(h&&h!=='#'){window.location.href=h;}return false;"`;
+    ctaOnclick = `onclick="if(typeof fcTrackEvent==='function'){fcTrackEvent('InitiateCheckout');}var b=document.getElementById('fc-bump-checkbox');var bp=b&&b.checked;var ne=document.getElementById('fc-checkout-name');var ee=document.getElementById('fc-checkout-email');if(ne&&ee){var nm=ne.value.trim();var em=ee.value.trim();if(!nm||!em){alert(${fcAttrSafe(JSON.stringify(validationMsg))});return false;}${saveFetchJs}}${messengerPart}var h=bp?${bundleHrefJs}:${baseHrefJs};${directCallJs}if(h&&h!=='#'){window.open(h,'_blank','noopener');}return false;"`;
     ctaHref = '#';
   }
 
