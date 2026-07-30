@@ -1839,7 +1839,9 @@ function addSlot() {
 
 async function uploadGal(evt, idx) {
   const file = evt.target.files[0]; if(!file) return;
-  const dataUrl = await fcCompressImage(file);
+  // Use PNG so transparent backgrounds (device mockups, cutout screenshots) are preserved.
+  // JPEG has no alpha channel and would flatten transparency to solid black.
+  const dataUrl = await fcCompressImage(file, 1400, 0.85, 'image/png');
   galleryItems[idx].src = dataUrl;
   const slot = document.getElementById(`gs-${idx}`);
   const img = document.getElementById(`gi-${idx}`);
@@ -2424,6 +2426,25 @@ ${routerScript}
 </html>`;
 }
 
+// Accepts any pasted YouTube link format (watch?v=, youtu.be/, shorts/, or already an
+// embed URL) and normalizes it to https://www.youtube.com/embed/VIDEO_ID, which is the
+// only format YouTube allows inside an <iframe>. Non-YouTube URLs (e.g. Vimeo, direct
+// mp4 embed links) are passed through unchanged.
+function fcToEmbedUrl(url) {
+  if (!url) return url;
+  const patterns = [
+    /youtube\.com\/watch\?v=([\w-]+)/,
+    /youtu\.be\/([\w-]+)/,
+    /youtube\.com\/shorts\/([\w-]+)/,
+    /youtube\.com\/embed\/([\w-]+)/
+  ];
+  for (const re of patterns) {
+    const m = url.match(re);
+    if (m) return `https://www.youtube.com/embed/${m[1]}`;
+  }
+  return url;
+}
+
 function fcBuildGalleryHTML(items) {
   const n = items.length;
   if (!n) return '';
@@ -2462,7 +2483,7 @@ async function generate() {
   const deadline = document.getElementById('f-deadline').value.trim();
   const brand = document.getElementById('f-brand').value.trim()||'Digitera Levi';
   const product = document.getElementById('f-product').value.trim()||'FunnelCraft';
-  const video = document.getElementById('f-video').value.trim();
+  const video = fcToEmbedUrl(document.getElementById('f-video').value.trim());
   const tone = document.getElementById('f-tone').value;
   const payVal = document.getElementById('pay-val').value.trim();
   const bumpName = document.getElementById('bump-name').value.trim();
