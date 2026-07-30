@@ -3245,6 +3245,80 @@ function fcRebuildSingleImage(zoneId, imgId, dataUrl) {
 
 const PROJECTS_KEY = 'funnelcraft_projects_v1';
 
+// ---------- INDEXEDDB STORAGE (for "My Projects") ----------
+// localStorage caps out around 5-10MB per site, which fills up fast once projects
+// start embedding full-size images as base64. IndexedDB has a far larger quota
+// (typically hundreds of MB or more, tied to available disk space), so saved
+// projects are stored there instead to avoid QuotaExceededError.
+const FC_IDB_NAME = 'funnelcraft_db';
+const FC_IDB_STORE = 'kv';
+
+function fcIdbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(FC_IDB_NAME, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(FC_IDB_STORE)) {
+        req.result.createObjectStore(FC_IDB_STORE);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function fcIdbGet(key) {
+  try {
+    const db = await fcIdbOpen();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(FC_IDB_STORE, 'readonly');
+      const req = tx.objectStore(FC_IDB_STORE).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) { return undefined; }
+}
+
+async function fcIdbSet(key, value) {
+  const db = await fcIdbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(FC_IDB_STORE, 'readwrite');
+    tx.objectStore(FC_IDB_STORE).put(value, key);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function fcIdbDelete(key) {
+  try {
+    const db = await fcIdbOpen();
+    return new Promise((resolve) => {
+      const tx = db.transaction(FC_IDB_STORE, 'readwrite');
+      tx.objectStore(FC_IDB_STORE).delete(key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    });
+  } catch (e) { return false; }
+}
+
+// One-time migration: older versions of this tool saved projects in localStorage.
+// Move that data into IndexedDB the first time we don't find anything there yet,
+// so nobody's existing saved projects appear to vanish after this update.
+let fcProjectsMigrated = false;
+async function fcMigrateProjectsIfNeeded() {
+  if (fcProjectsMigrated) return;
+  fcProjectsMigrated = true;
+  const existing = await fcIdbGet(PROJECTS_KEY);
+  if (existing !== undefined) return;
+  try {
+    const raw = localStorage.getItem(PROJECTS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      await fcIdbSet(PROJECTS_KEY, parsed);
+      localStorage.removeItem(PROJECTS_KEY);
+    }
+  } catch (e) { /* nothing to migrate */ }
+}
+
 // ---------- CLOUD PROJECT SYNC ----------
 // Uses the same license key that unlocks the app as the cloud identifier —
 // no separate account/login needed. Falls back to local-only silently if
@@ -3287,15 +3361,21 @@ function fcSetSyncStatus(text) {
   if (el) el.textContent = text;
 }
 
-function fcGetProjects() {
+async function fcGetProjects() {
+  await fcMigrateProjectsIfNeeded();
   try {
-    const raw = localStorage.getItem(PROJECTS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const data = await fcIdbGet(PROJECTS_KEY);
+    return Array.isArray(data) ? data : [];
   } catch(e) { return []; }
 }
 
-function fcSetProjects(list) {
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(list));
+async function fcSetProjects(list) {
+  try {
+    await fcIdbSet(PROJECTS_KEY, list);
+  } catch (e) {
+    alert('Could not save project — your browser may be blocking storage (e.g. private/incognito mode with strict settings), or the device is out of disk space.\n\n' + e.message);
+    return;
+  }
   fcCloudSaveProjects(list).then(ok => {
     fcSetSyncStatus(ok ? '☁️ Synced to your account' : (fcGetLicenseKey() ? '⚠️ Saved on this device only — could not reach cloud backup' : 'Saved on this device only (no license key found)'));
   });
@@ -3304,12 +3384,12 @@ function fcSetProjects(list) {
 async function fcOpenProjects() {
   document.getElementById('fc-projects-modal').style.display = 'flex';
   fcSetSyncStatus(fcGetLicenseKey() ? '☁️ Checking cloud backup...' : 'Saved on this device only (no license key found)');
-  fcRenderProjectsList();
+  await fcRenderProjectsList();
   const cloud = await fcCloudLoadProjects();
   if (cloud) {
-    localStorage.setItem(PROJECTS_KEY, JSON.stringify(cloud));
+    await fcIdbSet(PROJECTS_KEY, cloud);
     fcSetSyncStatus('☁️ Synced to your account');
-    fcRenderProjectsList();
+    await fcRenderProjectsList();
   } else if (fcGetLicenseKey()) {
     fcSetSyncStatus('⚠️ Could not reach cloud backup — showing saves on this device only');
   }
@@ -3319,9 +3399,10 @@ function fcCloseProjects() {
   document.getElementById('fc-projects-modal').style.display = 'none';
 }
 
-function fcClearAllSavedData() {
+async function fcClearAllSavedData() {
   if (!confirm('This will permanently delete ALL saved projects on this device AND in the cloud (for this license key). This cannot be undone. Continue?')) return;
-  localStorage.removeItem(PROJECTS_KEY);
+  await fcIdbDelete(PROJECTS_KEY);
+  localStorage.removeItem(PROJECTS_KEY); // clean up any leftover legacy data
   localStorage.removeItem(DRAFT_KEY);
   fcCloudSaveProjects([]).then(() => {
     fcSetSyncStatus('🗑️ All saved projects cleared.');
@@ -3329,24 +3410,29 @@ function fcClearAllSavedData() {
   });
 }
 
-function fcSaveNewProject() {
+async function fcSaveNewProject() {
   const nameInput = document.getElementById('fc-project-name-input');
   const name = nameInput.value.trim();
   if (!name) { alert('Please name this project first.'); return; }
-  const projects = fcGetProjects();
+  const projects = await fcGetProjects();
   projects.unshift({
     id: 'proj_' + Date.now(),
     name,
     savedAt: new Date().toISOString(),
     data: fcCollectFieldData()
   });
-  fcSetProjects(projects);
+  // Cap the number of saved projects — each one embeds full-size images as base64,
+  // so keeping unlimited old projects around is what fills up storage over time.
+  // Keep only the most recent 8.
+  const MAX_SAVED_PROJECTS = 8;
+  if (projects.length > MAX_SAVED_PROJECTS) projects.length = MAX_SAVED_PROJECTS;
+  await fcSetProjects(projects);
   nameInput.value = '';
-  fcRenderProjectsList();
+  await fcRenderProjectsList();
 }
 
-function fcLoadProject(id) {
-  const projects = fcGetProjects();
+async function fcLoadProject(id) {
+  const projects = await fcGetProjects();
   const proj = projects.find(p => p.id === id);
   if (!proj) return;
   fcApplyFieldData(proj.data);
@@ -3354,17 +3440,17 @@ function fcLoadProject(id) {
   alert(`Loaded "${proj.name}" ✓`);
 }
 
-function fcDeleteProject(id) {
-  const projects = fcGetProjects();
+async function fcDeleteProject(id) {
+  const projects = await fcGetProjects();
   const proj = projects.find(p => p.id === id);
   if (!proj) return;
   if (!confirm(`Delete "${proj.name}"? This can't be undone.`)) return;
-  fcSetProjects(projects.filter(p => p.id !== id));
-  fcRenderProjectsList();
+  await fcSetProjects(projects.filter(p => p.id !== id));
+  await fcRenderProjectsList();
 }
 
-function fcRenderProjectsList() {
-  const projects = fcGetProjects();
+async function fcRenderProjectsList() {
+  const projects = await fcGetProjects();
   const listEl = document.getElementById('fc-projects-list');
   const emptyEl = document.getElementById('fc-projects-empty');
   if (projects.length === 0) {
