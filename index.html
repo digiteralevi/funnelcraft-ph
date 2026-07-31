@@ -4458,13 +4458,43 @@ async function fcSetProjects(list) {
   });
 }
 
+function fcMergeProjectLists(localList, cloudList) {
+  const local = Array.isArray(localList) ? localList : [];
+  const cloud = Array.isArray(cloudList) ? cloudList : [];
+  const byId = new Map();
+  // Seed with local first so local always has a presence even if cloud is empty/stale.
+  local.forEach(p => { if (p && p.id) byId.set(p.id, p); });
+  cloud.forEach(p => {
+    if (!p || !p.id) return;
+    const existing = byId.get(p.id);
+    if (!existing) { byId.set(p.id, p); return; }
+    // Keep whichever copy was saved more recently.
+    const existingTs = existing.savedAt ? Date.parse(existing.savedAt) : 0;
+    const incomingTs = p.savedAt ? Date.parse(p.savedAt) : 0;
+    if (incomingTs > existingTs) byId.set(p.id, p);
+  });
+  const merged = Array.from(byId.values());
+  merged.sort((a, b) => (Date.parse(b.savedAt||0)||0) - (Date.parse(a.savedAt||0)||0));
+  const MAX_SAVED_PROJECTS = 8;
+  if (merged.length > MAX_SAVED_PROJECTS) merged.length = MAX_SAVED_PROJECTS;
+  return merged;
+}
+
 async function fcOpenProjects() {
   document.getElementById('fc-projects-modal').style.display = 'flex';
   fcSetSyncStatus(fcGetLicenseKey() ? '☁️ Checking cloud backup...' : 'Saved on this device only (no license key found)');
   await fcRenderProjectsList();
   const cloud = await fcCloudLoadProjects();
   if (cloud) {
-    await fcIdbSet(PROJECTS_KEY, cloud);
+    const local = await fcGetProjects();
+    const merged = fcMergeProjectLists(local, cloud);
+    // Never silently delete local data: only write back if the merged result
+    // actually differs from what's on the cloud (e.g. local had something the
+    // cloud didn't), so an empty/stale cloud response can never erase local saves.
+    await fcIdbSet(PROJECTS_KEY, merged);
+    if (JSON.stringify(merged) !== JSON.stringify(cloud)) {
+      fcCloudSaveProjects(merged);
+    }
     fcSetSyncStatus('☁️ Synced to your account');
     await fcRenderProjectsList();
   } else if (fcGetLicenseKey()) {
