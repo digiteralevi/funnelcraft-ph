@@ -381,6 +381,15 @@ select option{background:#1F1440;}
               <option value="taglish-dr">Taglish — Direct Response (Halbert-style, para sa Pinoy)</option>
             </select>
           </div>
+          <div class="field">
+            <div class="lbl">Sales Page Length</div>
+            <select id="f-length">
+              <option value="standard">Standard — tight, skimmable, punchy sections</option>
+              <option value="long-form">Long-Form — expanded storytelling, deeper persuasion per section</option>
+              <option value="ultra-long-form">Ultra Long-Form — maximum depth, every section fully fleshed out</option>
+            </select>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">Longer copy = more persuasion but a bigger page. Standard is best for most offers; go Long-Form for high-ticket or emotionally complex offers.</p>
+          </div>
         </div>
 
       </div>
@@ -2362,14 +2371,34 @@ function fcTemplateThumbSrcdoc(id, full) {
   const doc = layoutFn();
   const styleMatch = doc.match(/<style>([\s\S]*?)<\/style>/);
   const heroStyle = styleMatch ? styleMatch[1] : '';
-  const heroMarkup = doc.replace(/<style>[\s\S]*?<\/style>/, '');
+  let heroMarkup = doc.replace(/<style>[\s\S]*?<\/style>/, '');
   const p = palettes[tpl.palette] || palettes['midnight-gold'];
   const fontCss = FC_TEMPLATE_FONT_CSS[tpl.font] || "'Poppins',sans-serif";
   const mutedColor = `color-mix(in srgb, ${p.txt} 62%, ${p.bg})`;
   const overrideCss = `:root{--brand-primary:${p.acc};--brand-secondary:${p.sec};--brand-bg:${p.gradient||p.bg};--brand-bg-alt:${p.bg};--brand-text:${p.txt};--brand-text-muted:${mutedColor};--font-display:${fontCss};}
     body{${full ? '' : 'pointer-events:none;'}}`;
+
+  if (full) {
+    const imgs = [];
+    if (heroB64) imgs.push(heroB64);
+    (galleryItems || []).filter(g => g && g.src).forEach(g => imgs.push(g.src));
+    if (imgs.length) {
+      let i = 0;
+      heroMarkup = heroMarkup.replace(/<div style="width:100%;height:100%;background:#[0-9a-fA-F]{3,8}[^"]*"><\/div>/g, () => {
+        if (i >= imgs.length) return '<div style="width:100%;height:100%;background:rgba(128,128,128,0.2);"></div>';
+        const styleAttr = i === 0 ? (tpl.heroImgStyle || 'width:100%;height:100%;object-fit:cover;display:block;') : 'width:100%;height:100%;object-fit:cover;display:block;';
+        const tag = `<img src="${imgs[i]}" style="${styleAttr}">`;
+        i++;
+        return tag;
+      });
+    }
+  }
+
   const bodyMarkup = full ? fcMockBodyHtml(tpl, id) : '';
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${heroStyle}</style><style>${overrideCss}</style></head><body>${heroMarkup}${bodyMarkup}</body></html>`;
+  const noAssetsNote = full && !heroB64 && !(galleryItems||[]).some(g=>g&&g.src)
+    ? `<div style="text-align:center;padding:8px 16px;font-size:11px;background:rgba(0,0,0,0.06);color:var(--brand-text-muted, #888);">📎 Placeholder colors shown — upload your Hero Image / Gallery in the Assets tab to preview your real photos here.</div>`
+    : '';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${heroStyle}</style><style>${overrideCss}</style></head><body>${noAssetsNote}${heroMarkup}${bodyMarkup}</body></html>`;
 }
 
 function fcBuildTemplateGrid() {
@@ -2674,7 +2703,7 @@ function getApiKey() {
   return k;
 }
 
-async function callAI(systemPrompt, userPrompt) {
+async function callAI(systemPrompt, userPrompt, maxTokensOverride) {
   const key = getApiKey();
   if(!key) throw new Error('no key');
 
@@ -2693,7 +2722,7 @@ async function callAI(systemPrompt, userPrompt) {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { maxOutputTokens: 32768, temperature: 0.9 }
+          generationConfig: { maxOutputTokens: maxTokensOverride || 32768, temperature: 0.9 }
         })
       });
 
@@ -3494,6 +3523,25 @@ async function generate() {
   const product = document.getElementById('f-product').value.trim()||'FunnelCraft';
   const video = fcToEmbedUrl(document.getElementById('f-video').value.trim());
   const tone = document.getElementById('f-tone').value;
+  const lengthMode = document.getElementById('f-length') ? document.getElementById('f-length').value : 'standard';
+  const lengthConfig = {
+    'standard': {
+      tokens: 32768,
+      copyRule: 'Keep every section\'s copy concise and punchy — short sentences, skimmable, no filler. Do not write long paragraphs.',
+      sectionDepth: 'Each section should be brief: 1 short paragraph or a tight bullet list. Prioritize finishing the full page over expanding any single section.'
+    },
+    'long-form': {
+      tokens: 49152,
+      copyRule: 'Write in a long-form, story-driven direct-response style — this page is meant to be read, not just skimmed. Sentences can be a bit longer and more textured, but never rambling or repetitive.',
+      sectionDepth: 'Expand each major section (pain points, solution bridge, transformation, what\'s included, guarantee) into 2-4 short paragraphs or richer bullet explanations instead of single one-liners. Add specific, vivid detail and mini-stories where it fits the offer. The page should feel thorough and complete, like a real high-ticket sales letter — but every sentence must still earn its place, never pad with generic fluff just to add length.'
+    },
+    'ultra-long-form': {
+      tokens: 65536,
+      copyRule: 'Write a maximum-depth, classic long-form direct-response sales letter — the kind used for high-ticket or emotionally complex offers. Fully develop every persuasion beat: agitate the problem, paint the transformation vividly, stack value deeply, handle objections directly.',
+      sectionDepth: 'Every major section (pain points, solution bridge, transformation, what\'s included, guarantee, FAQ) should be fully fleshed out with 3-5 rich paragraphs or an extensive detailed bullet list, real specificity, and persuasive depth. Add extra micro-sections where natural (e.g. "who this is NOT for", a short founder/brand story, an objections-handled block) to deepen trust. This should read like a complete, comprehensive sales letter, not a summary — but still keep sentences sharp and avoid repeating the same point twice.'
+    }
+  }[lengthMode] || { tokens: 32768, copyRule: 'Keep every section\'s copy concise and punchy.', sectionDepth: 'Keep sections brief.' };
+
   const payVal = document.getElementById('pay-val').value.trim();
   const bumpName = document.getElementById('bump-name').value.trim();
   const bumpPrice = document.getElementById('bump-price').value.trim();
@@ -3781,6 +3829,8 @@ fcUpdateCalc();
   const sysPrompt = `You are a world-class direct response copywriter and frontend developer.
 Build a COMPLETE single-file HTML long-form high-converting sales page. Write actual persuasive copy — no filler, no placeholders. Use modern, plain, relatable language — avoid stiff, overly formal, or old-fashioned phrasing. Write like a sharp modern marketer talking to a real person, not a textbook.
 
+COPY LENGTH MODE (${lengthMode.toUpperCase()}): ${lengthConfig.copyRule}
+
 CONVERSION REQUIREMENTS (apply these regardless of tone selected — friendly/modern voice should never mean weak persuasion):
 - Open with a specific, benefit-driven headline — not a vague or generic claim
 - Make the pain points section specific and felt, not abstract
@@ -3854,7 +3904,7 @@ REQUIRED JAVASCRIPT:
 2. Floating sticky CTA bar after scrolling 400px
 3. Social proof toast every 15 seconds with a random realistic name + city appropriate to the target market described below
 
-PAGE SECTIONS (write ALL, keep copy tight and punchy — concise sentences, not essays):
+PAGE SECTIONS (write ALL — ${lengthConfig.sectionDepth}):
 1. Announcement bar - urgency + price. IMPORTANT: do NOT use position:fixed or position:sticky for this bar — a site navigation header is already injected above your content and is sticky at the top of the page, so this bar must sit in normal document flow (it will appear directly below the nav).
 2. Hero - punchy headline, subheadline, CTA, hero image. MANDATORY: build this section using the EXACT container structure given in the TEMPLATE block above (near the top of this brief) — do not default to a generic stacked headline-then-image layout. Follow that template's HTML skeleton precisely, placing the HERO IMAGE block (given below under "INJECT THESE HTML BLOCKS") exactly where indicated.
 3. Video section if provided
@@ -3882,7 +3932,7 @@ Each testimonial card should have a fixed width (e.g. 280-320px, flex-shrink:0) 
 18. Final CTA
 19. Footer — brand name, copyright line, tagline. Do NOT add your own "Privacy Policy", "Terms", or "Disclaimer" links here — a working legal footer with those exact links is already injected automatically after your content, so adding your own (non-functional, placeholder href="#") versions would create confusing duplicates.
 
-IMPORTANT: Keep every section's copy concise and punchy. Do not write long paragraphs. This must fit completely within the output token budget — prioritize finishing the full HTML document over writing extra-long copy in any one section.
+IMPORTANT: ${lengthConfig.sectionDepth} This must fit completely within the output token budget — always prioritize finishing the full HTML document (a complete closing </html> tag) over leaving copy unfinished in the last section.
 
 OUTPUT: Pure valid HTML only starting with <!DOCTYPE html>. No markdown. No backticks. No explanation. The response MUST end with a complete closing </html> tag.`;
 
@@ -3903,7 +3953,7 @@ COPYWRITING TONE: ${toneMap[tone]||toneMap['english-modern']}
 Write every section with real, emotionally persuasive copy, matching the tone and language above.`;
 
   try {
-    let raw = await callAI(sysPrompt, userPrompt);
+    let raw = await callAI(sysPrompt, userPrompt, lengthConfig.tokens);
     let cleaned = raw.replace(/^```html\n?/i,'').replace(/^```\n?/i,'').replace(/```$/gi,'').trim();
 
     if (!cleaned.toLowerCase().includes('</html>')) {
@@ -4170,7 +4220,7 @@ function fcShowPayInstructions(){
 
 const DRAFT_KEY = 'funnelcraft_draft_v1';
 const DRAFT_FIELD_IDS = ['f-offer','f-buyer','f-problem','f-transform','f-includes','f-price','f-origprice',
-  'f-guarantee','f-brand','f-product','f-video','f-tone','pay-val','bump-name','bump-price','bump-bundle-link',
+  'f-guarantee','f-brand','f-product','f-video','f-tone','f-length','pay-val','bump-name','bump-price','bump-bundle-link',
   'palette-sel','font-sel','btn-style','f-metapixel','f-ga4','f-tiktokpixel','f-legal-biz','f-legal-email',
   'c-bg','c-acc','c-sec','c-txt','f-bonuses-list','f-story-tagline','f-story-stats','f-story-testimonials',
   'f-deadline','f-og-image','f-coupon-code','f-coupon-message','f-exit-headline','f-exit-offer','f-hero-img-type',
