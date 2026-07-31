@@ -3895,7 +3895,7 @@ GALLERY: ${galleryHTML||'none provided'}
 PROOF/SAMPLES SECTION (insert this exactly as-is, do not rewrite or restyle it — it's pre-built with alternating image/text layout): ${proofHTML||'none provided'}
 COUNTDOWN TIMER (insert this exactly as-is if provided, near the announcement bar or price section — it's a REAL live countdown, never invent your own fake countdown besides this one): ${countdownHTML||'none provided'}
 POTENTIAL REVENUE CALCULATOR (insert this exactly as-is if provided — it's a pre-built interactive tool, do not rewrite it): ${calcHTML||'none provided'}
-ORDER BUMP: ${bumpHTML||'none provided'}
+ORDER BUMP + CHECKOUT NAME/EMAIL FORM (insert this exactly as-is, directly above the main CTA button, if it is non-empty — it already contains its own checkbox/input elements with the exact ids the CTA button's onclick handler expects. If it says "none provided", it means NEITHER an order bump checkbox NOR a name/email capture form should appear on this page — in that case do NOT invent your own version of either one, and do NOT add any input fields with ids fc-bump-checkbox, fc-checkout-name, or fc-checkout-email yourself; the CTA button's onclick handler already safely skips those checks when the elements don't exist, so the button will go straight to checkout): ${checkoutBlockHTML || 'none provided'}
 
 ALL CTA BUTTONS must use: href="${ctaHref}" ${ctaOnclick}
 
@@ -4438,6 +4438,13 @@ function fcSetSyncStatus(text) {
   if (el) el.textContent = text;
 }
 
+function fcKeyFingerprint() {
+  const key = fcGetLicenseKey();
+  if (!key) return '';
+  if (key.length <= 8) return ` (key: ${key})`;
+  return ` (key: ${key.slice(0, 4)}…${key.slice(-4)})`;
+}
+
 async function fcGetProjects() {
   await fcMigrateProjectsIfNeeded();
   try {
@@ -4454,7 +4461,7 @@ async function fcSetProjects(list) {
     return;
   }
   fcCloudSaveProjects(list).then(ok => {
-    fcSetSyncStatus(ok ? '☁️ Synced to your account' : (fcGetLicenseKey() ? '⚠️ Saved on this device only — could not reach cloud backup' : 'Saved on this device only (no license key found)'));
+    fcSetSyncStatus(ok ? `☁️ Synced to your account${fcKeyFingerprint()}` : (fcGetLicenseKey() ? '⚠️ Saved on this device only — could not reach cloud backup' : 'Saved on this device only (no license key found)'));
   });
 }
 
@@ -4482,7 +4489,7 @@ function fcMergeProjectLists(localList, cloudList) {
 
 async function fcOpenProjects() {
   document.getElementById('fc-projects-modal').style.display = 'flex';
-  fcSetSyncStatus(fcGetLicenseKey() ? '☁️ Checking cloud backup...' : 'Saved on this device only (no license key found)');
+  fcSetSyncStatus(fcGetLicenseKey() ? `☁️ Checking cloud backup${fcKeyFingerprint()}...` : 'Saved on this device only (no license key found)');
   await fcRenderProjectsList();
   const cloud = await fcCloudLoadProjects();
   if (cloud) {
@@ -4495,7 +4502,7 @@ async function fcOpenProjects() {
     if (JSON.stringify(merged) !== JSON.stringify(cloud)) {
       fcCloudSaveProjects(merged);
     }
-    fcSetSyncStatus('☁️ Synced to your account');
+    fcSetSyncStatus(`☁️ Synced to your account${fcKeyFingerprint()}`);
     await fcRenderProjectsList();
   } else if (fcGetLicenseKey()) {
     fcSetSyncStatus('⚠️ Could not reach cloud backup — showing saves on this device only');
