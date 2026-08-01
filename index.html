@@ -4411,26 +4411,52 @@ function fcGetLicenseKey() {
 
 async function fcCloudSaveProjects(list) {
   const key = fcGetLicenseKey();
-  if (!key) return false;
+  if (!key) { console.warn('[FunnelCraft Cloud Sync] No license key found — skipping cloud save.'); return false; }
   try {
     const res = await fetch(`${FC_LICENSE_WORKER_URL}/projects?key=${encodeURIComponent(key)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ projects: list })
     });
-    const data = await res.json();
-    return !!data.ok;
-  } catch(e) { return false; }
+    let data;
+    try { data = await res.json(); } catch(parseErr) {
+      const bodyText = await res.text().catch(()=>'(could not read body)');
+      console.error('[FunnelCraft Cloud Sync] SAVE failed — response was not valid JSON.', { status: res.status, statusText: res.statusText, body: bodyText });
+      return false;
+    }
+    if (!res.ok || !data.ok) {
+      console.error('[FunnelCraft Cloud Sync] SAVE rejected by server.', { status: res.status, statusText: res.statusText, response: data });
+      return false;
+    }
+    console.info('[FunnelCraft Cloud Sync] SAVE ok.', { projectCount: list.length, response: data });
+    return true;
+  } catch(e) {
+    console.error('[FunnelCraft Cloud Sync] SAVE network error — request never reached the server (check CORS, connectivity, or if the worker is down).', e);
+    return false;
+  }
 }
 
 async function fcCloudLoadProjects() {
   const key = fcGetLicenseKey();
-  if (!key) return null;
+  if (!key) { console.warn('[FunnelCraft Cloud Sync] No license key found — skipping cloud load.'); return null; }
   try {
     const res = await fetch(`${FC_LICENSE_WORKER_URL}/projects?key=${encodeURIComponent(key)}`);
-    const data = await res.json();
-    return data.ok ? data.projects : null;
-  } catch(e) { return null; }
+    let data;
+    try { data = await res.json(); } catch(parseErr) {
+      const bodyText = await res.text().catch(()=>'(could not read body)');
+      console.error('[FunnelCraft Cloud Sync] LOAD failed — response was not valid JSON.', { status: res.status, statusText: res.statusText, body: bodyText });
+      return null;
+    }
+    if (!res.ok || !data.ok) {
+      console.error('[FunnelCraft Cloud Sync] LOAD rejected by server.', { status: res.status, statusText: res.statusText, response: data });
+      return null;
+    }
+    console.info('[FunnelCraft Cloud Sync] LOAD ok.', { projectCount: (data.projects||[]).length, response: data });
+    return data.projects;
+  } catch(e) {
+    console.error('[FunnelCraft Cloud Sync] LOAD network error — request never reached the server (check CORS, connectivity, or if the worker is down).', e);
+    return null;
+  }
 }
 
 function fcSetSyncStatus(text) {
