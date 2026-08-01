@@ -2495,8 +2495,9 @@ function fcMockBodyHtml(tpl, id) {
   </section>`;
 }
 
-function fcImgPlaceholderHtml() {
-  return `<div style="width:100%;height:100%;background:repeating-linear-gradient(45deg, rgba(120,120,120,0.10), rgba(120,120,120,0.10) 10px, rgba(120,120,120,0.045) 10px, rgba(120,120,120,0.045) 20px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed rgba(120,120,120,0.4);box-sizing:border-box;">
+function fcImgPlaceholderHtml(useAbsolute) {
+  const posStyle = useAbsolute ? 'position:absolute;inset:0;' : 'align-self:stretch;flex:1 1 auto;min-height:80px;';
+  return `<div style="${posStyle}width:100%;height:100%;background:repeating-linear-gradient(45deg, rgba(120,120,120,0.10), rgba(120,120,120,0.10) 10px, rgba(120,120,120,0.045) 10px, rgba(120,120,120,0.045) 20px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1.5px dashed rgba(120,120,120,0.4);box-sizing:border-box;">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(120,120,120,0.75)" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
     <span style="font-size:9.5px;color:rgba(110,110,110,0.85);font-weight:700;letter-spacing:.04em;text-align:center;padding:0 6px;">YOUR PHOTO HERE</span>
   </div>`;
@@ -2514,7 +2515,10 @@ function fcTemplateThumbSrcdoc(id, full) {
   const fontCss = FC_TEMPLATE_FONT_CSS[tpl.font] || "'Poppins',sans-serif";
   const mutedColor = `color-mix(in srgb, ${p.txt} 62%, ${p.bg})`;
   const overrideCss = `:root{--brand-primary:${p.acc};--brand-secondary:${p.sec};--brand-bg:${p.gradient||p.bg};--brand-bg-alt:${p.bg};--brand-text:${p.txt};--brand-text-muted:${mutedColor};--font-display:${fontCss};}
-    body{${full ? '' : 'pointer-events:none;'}}`;
+    body{${full ? '' : 'pointer-events:none;'}}
+    ${full ? '.hero,.top,section.hero{min-height:480px !important;} .media{height:320px !important;} .strip{height:220px !important;}' : ''}`;
+
+  const heroUsesAbsolute = !!(tpl.heroImgStyle && tpl.heroImgStyle.includes('position:absolute'));
 
   if (full) {
     const imgs = [];
@@ -2522,14 +2526,23 @@ function fcTemplateThumbSrcdoc(id, full) {
     (galleryItems || []).filter(g => g && g.src).forEach(g => imgs.push(g.src));
     let i = 0;
     heroMarkup = heroMarkup.replace(/<div style="width:100%;height:100%;background:#[0-9a-fA-F]{3,8}[^"]*"><\/div>/g, () => {
-      if (i >= imgs.length) return fcImgPlaceholderHtml();
+      if (i >= imgs.length) {
+        const ph = fcImgPlaceholderHtml(i === 0 && heroUsesAbsolute);
+        i++;
+        return ph;
+      }
       const styleAttr = i === 0 ? (tpl.heroImgStyle || 'width:100%;height:100%;object-fit:cover;display:block;') : 'width:100%;height:100%;object-fit:cover;display:block;';
       const tag = `<img src="${imgs[i]}" style="${styleAttr}">`;
       i++;
       return tag;
     });
   } else {
-    heroMarkup = heroMarkup.replace(/<div style="width:100%;height:100%;background:#[0-9a-fA-F]{3,8}[^"]*"><\/div>/g, fcImgPlaceholderHtml);
+    let i = 0;
+    heroMarkup = heroMarkup.replace(/<div style="width:100%;height:100%;background:#[0-9a-fA-F]{3,8}[^"]*"><\/div>/g, () => {
+      const ph = fcImgPlaceholderHtml(i === 0 && heroUsesAbsolute);
+      i++;
+      return ph;
+    });
   }
 
   const bodyMarkup = full ? fcMockBodyHtml(tpl, id) : '';
