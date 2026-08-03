@@ -4125,14 +4125,14 @@ PAGE SECTIONS (write ALL — ${lengthConfig.sectionDepth}):
 6. Solution bridge - 2-3 short paragraphs
 7. What's Included - present each item as a card (follow the LAYOUT RULE FOR CARD GRIDS above), NOT a plain bullet or numbered list. Each card: a small circular number or icon badge at the top, a bold 3-6 word title, and one short benefit sentence underneath (rewrite/expand the raw item into a benefit, don't just repeat it verbatim). If a GALLERY block is provided below, insert it directly after this card grid with a short heading like "See What's Inside".
 8. Transformation - before/after, brief
-9. Testimonials — write 3 short testimonials with realistic names fitting the target market, and make them auto-rotate continuously using this EXACT CSS-only infinite marquee pattern (do NOT use JavaScript, do NOT use scroll-snap, do NOT make it draggable — copy this structure exactly, only replacing the card content):
+9. Testimonials — write 6 short testimonials with realistic, varied names and roles/contexts fitting the target market (avoid repeating similar phrasing or the same angle twice — vary what each one praises: price/value, speed, quality, support, ease of use, results), and make them auto-rotate continuously using this EXACT CSS-only infinite marquee pattern (do NOT use JavaScript, do NOT use scroll-snap, do NOT make it draggable — copy this structure exactly, only replacing the card content):
 <div style="overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);">
-  <div style="display:flex;gap:20px;width:max-content;animation:fcTestiMarquee 28s linear infinite;">
-    <!-- render the 3 testimonial cards here, then IMMEDIATELY repeat the exact same 3 cards a second time (6 cards total) so the loop is seamless -->
+  <div style="display:flex;gap:20px;width:max-content;animation:fcTestiMarquee 40s linear infinite;">
+    <!-- render the 6 testimonial cards here, then IMMEDIATELY repeat the exact same 6 cards a second time (12 cards total) so the loop is seamless -->
   </div>
 </div>
 <style>@keyframes fcTestiMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}</style>
-Each testimonial card should have a fixed width (e.g. 280-320px, flex-shrink:0) so the row scrolls smoothly.
+Each testimonial card should have a fixed width (e.g. 280-320px, flex-shrink:0) so the row scrolls smoothly. With 12 cards total, increase the animation duration to roughly 40-46s (vs the old 3-testimonial version) so the scroll speed per card stays comfortable to read, not rushed.
 10. Proof/Samples Section — if a PROOF/SAMPLES SECTION block is provided below, insert it here exactly as given (do not rewrite, restyle, or omit any part of it). Add a short section heading above it like "See It In Action" or "Real Results" if it fits the offer.
 11. How it works - 3 steps
 12. Potential Revenue Calculator — if a POTENTIAL REVENUE CALCULATOR block is provided below, insert it here exactly as given (do not rewrite it), with a short heading like "See Your Potential" above it.
