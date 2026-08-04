@@ -4004,20 +4004,54 @@ async function generate() {
   // Universal "Potential Revenue" calculator — works for any niche since it just multiplies the real price by a sales slider
   const calcPriceParsed = fcParsePriceGen(price);
   const calcHTML = calcPriceParsed.num > 0 ? `
-<div style="max-width:480px;margin:40px auto;padding:28px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);text-align:center;">
-  <h3 style="font-size:20px;margin-bottom:6px;">See Your Potential</h3>
-  <p style="opacity:.75;font-size:14px;margin-bottom:18px;">If you sold <strong id="fc-calc-count">5</strong> per month at ${price} each...</p>
-  <input type="range" id="fc-calc-slider" min="1" max="30" value="5" style="width:100%;" oninput="fcUpdateCalc()">
-  <div style="font-size:34px;font-weight:800;margin-top:16px;">${calcPriceParsed.prefix}<span id="fc-calc-result">0</span>/month</div>
+<div style="max-width:520px;margin:40px auto;padding:2px;border-radius:20px;background:linear-gradient(135deg, ${colors.acc}, ${colors.sec}, transparent 70%);">
+<div style="padding:32px 28px;border-radius:18px;background:rgba(10,10,20,0.92);text-align:center;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:-40%;right:-20%;width:60%;height:80%;background:radial-gradient(circle, ${colors.acc} 0%, transparent 70%);opacity:.18;pointer-events:none;"></div>
+  <div style="position:relative;z-index:1;">
+    <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${colors.acc};background:rgba(255,255,255,0.06);padding:6px 14px;border-radius:999px;margin-bottom:16px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:${colors.acc};display:inline-block;animation:fcPulse 1.6s ease-in-out infinite;"></span> Live Calculator
+    </div>
+    <h3 style="font-size:21px;margin-bottom:6px;">See Your Potential</h3>
+    <p style="opacity:.7;font-size:14px;margin-bottom:24px;">If you sold <strong id="fc-calc-count" style="color:${colors.acc};">5</strong> per month at ${price} each...</p>
+    <input type="range" id="fc-calc-slider" min="1" max="30" value="5" style="width:100%;height:6px;border-radius:999px;accent-color:${colors.acc};cursor:pointer;">
+    <div style="display:flex;justify-content:space-between;font-size:10px;opacity:.5;margin-top:6px;letter-spacing:.5px;"><span>1</span><span>30 sales/mo</span></div>
+    <div style="margin-top:22px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:center;gap:32px;">
+      <div>
+        <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Per Month</div>
+        <div style="font-size:30px;font-weight:800;">${calcPriceParsed.prefix}<span id="fc-calc-result">0</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Per Year</div>
+        <div style="font-size:30px;font-weight:800;color:${colors.acc};">${calcPriceParsed.prefix}<span id="fc-calc-result-year">0</span></div>
+      </div>
+    </div>
+  </div>
 </div>
+</div>
+<style>@keyframes fcPulse{0%,100%{opacity:1;}50%{opacity:.3;}}</style>
 <script>
-function fcUpdateCalc(){
-  var slider = document.getElementById('fc-calc-slider');
-  var count = parseInt(slider.value, 10);
-  document.getElementById('fc-calc-count').textContent = count;
-  document.getElementById('fc-calc-result').textContent = (count * ${calcPriceParsed.num}).toLocaleString();
-}
-fcUpdateCalc();
+(function(){
+  function fcInitCalc(){
+    var slider = document.getElementById('fc-calc-slider');
+    var countEl = document.getElementById('fc-calc-count');
+    var resultEl = document.getElementById('fc-calc-result');
+    var resultYearEl = document.getElementById('fc-calc-result-year');
+    if (!slider || !countEl || !resultEl || !resultYearEl) return; // elements not on this page — nothing to do
+    function update(){
+      var count = parseInt(slider.value, 10) || 0;
+      countEl.textContent = count;
+      resultEl.textContent = (count * ${calcPriceParsed.num}).toLocaleString();
+      resultYearEl.textContent = (count * ${calcPriceParsed.num} * 12).toLocaleString();
+    }
+    slider.addEventListener('input', update);
+    update();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fcInitCalc);
+  } else {
+    fcInitCalc();
+  }
+})();
 <\/script>` : '';
 
   // Extract the Google Sheets Apps Script URL from the opt-in embed (reused for checkout-form capture)
@@ -4073,14 +4107,6 @@ fcUpdateCalc();
   {
     const fcAttrSafe = (jsExpr) => jsExpr.replace(/"/g, '&quot;');
     let messengerPart = '';
-    if (bumpName && contactMessenger && selectedPay !== 'direct' && !bumpBundleLink) {
-      let mv = contactMessenger.trim().replace(/^@/, '');
-      let bumpMessengerLink = /^https?:\/\//i.test(mv) ? mv : (/^(m\.me|www\.messenger\.com|messenger\.com)\//i.test(mv) ? `https://${mv}` : `https://m.me/${mv.replace(/^\/+/, '')}`);
-      const bumpAlertMsg = tone.startsWith('english')
-        ? `Opening Messenger — please mention you also want to add "${bumpName}" (${bumpPrice}) when you message us. Continuing to checkout...`
-        : `Bubuksan ang Messenger — sabihin lang na gusto mo ring idagdag ang "${bumpName}" (${bumpPrice}) sa message mo. Ituloy na sa checkout...`;
-      messengerPart = `if(bp){window.open(${fcAttrSafe(JSON.stringify(bumpMessengerLink))},'_blank');alert(${fcAttrSafe(JSON.stringify(bumpAlertMsg))});}`;
-    }
     const validationMsg = tone.startsWith('english') ? 'Please fill in your name and email before continuing.' : 'Pakilagay ang pangalan at email mo bago magpatuloy.';
     const baseHrefJs = selectedPay === 'direct' ? `'#'` : fcAttrSafe(JSON.stringify(payVal));
     const bundleHrefJs = bumpBundleLink ? fcAttrSafe(JSON.stringify(bumpBundleLink)) : baseHrefJs;
