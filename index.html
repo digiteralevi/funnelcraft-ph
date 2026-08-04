@@ -4073,7 +4073,7 @@ fcUpdateCalc();
   {
     const fcAttrSafe = (jsExpr) => jsExpr.replace(/"/g, '&quot;');
     let messengerPart = '';
-    if (bumpName && contactMessenger && selectedPay !== 'direct') {
+    if (bumpName && contactMessenger && selectedPay !== 'direct' && !bumpBundleLink) {
       let mv = contactMessenger.trim().replace(/^@/, '');
       let bumpMessengerLink = /^https?:\/\//i.test(mv) ? mv : (/^(m\.me|www\.messenger\.com|messenger\.com)\//i.test(mv) ? `https://${mv}` : `https://m.me/${mv.replace(/^\/+/, '')}`);
       const bumpAlertMsg = tone.startsWith('english')
