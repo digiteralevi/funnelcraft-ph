@@ -645,6 +645,11 @@ select option{background:#1F1440;}
           </div>
         </div>
         <div class="field">
+          <div class="lbl">Bundle Price (optional)</div>
+          <input type="text" id="bump-total-override" placeholder="e.g. 2997 or ₱2,997 — leave blank to just add Bump Price to the base price">
+          <p style="font-size:11px;color:var(--muted);margin-top:4px;">If you're offering a special combined price for base + bump together (e.g. two products for ₱2,997 instead of their prices added up), enter that final price here. It'll be shown as the "Total" instead of the simple sum.</p>
+        </div>
+        <div class="field">
           <div class="lbl">Bundle Checkout Link (optional)</div>
           <input type="text" id="bump-bundle-link" placeholder="Checkout URL to use when the bump is checked — leave blank to use the same link as the base offer">
         </div>
@@ -2987,12 +2992,13 @@ async function suggest(field) {
 
 async function uploadSingle(evt, zoneId, imgId, type) {
   const file = evt.target.files[0]; if(!file) return;
-  // Always use PNG — it safely preserves transparency when present and works fine
-  // for fully opaque images too. JPEG has no alpha channel and silently fills any
-  // transparent area with solid black, which was causing images to lose their
-  // transparent background regardless of which hero image type was selected.
-  const format = 'image/png';
-  const dataUrl = await fcCompressImage(file, 1400, 0.85, format);
+  // QR codes need to stay perfectly crisp (PNG). For everything else, auto-detect:
+  // if the image actually has transparent pixels (logos, cutouts, mockups), keep PNG;
+  // otherwise use JPEG, which is typically 80-90% smaller for ordinary photos with
+  // no visible quality loss at this size — keeps cloud-sync payloads and the final
+  // generated page fast to load.
+  const format = (type === 'payqr') ? 'image/png' : 'auto';
+  const dataUrl = await fcCompressImage(file, 1600, 0.82, format);
   const zone = document.getElementById(zoneId);
   const img = document.getElementById(imgId);
   img.src = dataUrl; img.style.display='block';
@@ -3021,7 +3027,24 @@ function fcCompressImage(file, maxDim = 1400, quality = 0.82, format = 'image/jp
         canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(format === 'image/png' ? canvas.toDataURL('image/png') : canvas.toDataURL(format, quality));
+
+        let finalFormat = format;
+        if (format === 'auto') {
+          // Sample the alpha channel to see if this image actually uses transparency.
+          // Only images with real transparent pixels need PNG's lossless-but-heavy encoding;
+          // ordinary photos compress far smaller (and just as sharp) as JPEG.
+          let hasTransparency = false;
+          try {
+            const sampleW = Math.min(width, 200), sampleH = Math.min(height, 200);
+            const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
+            for (let i = 3; i < data.length; i += 4) {
+              if (data[i] < 250) { hasTransparency = true; break; }
+            }
+          } catch (e) { hasTransparency = true; } // if we can't check, play it safe
+          finalFormat = hasTransparency ? 'image/png' : 'image/jpeg';
+        }
+
+        resolve(finalFormat === 'image/png' ? canvas.toDataURL('image/png') : canvas.toDataURL(finalFormat, quality));
       };
       img.onerror = () => resolve(e.target.result); // fall back to original if resize fails
       img.src = e.target.result;
@@ -3355,13 +3378,37 @@ function buildFunnelBundle(salesDoc, cfg) {
   </div>
 </div>` : '';
 
+  const optinSafeForm = cfg.optinAppsScriptUrl
+    ? `<form id="fc-optin-form" style="display:flex;flex-direction:column;gap:12px;">
+      <input required type="email" id="fc-optin-email" placeholder="Your best email" style="padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:${c.txt};font-size:15px;">
+      <button type="submit" id="fc-optin-btn" style="padding:15px 20px;border-radius:8px;border:none;background:${c.acc};color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Send Me the ${cfg.optinMagnet} →</button>
+    </form>
+    <script>
+    document.getElementById('fc-optin-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      var email = document.getElementById('fc-optin-email').value.trim();
+      var btn = document.getElementById('fc-optin-btn');
+      btn.disabled = true;
+      btn.textContent = 'Please wait...';
+      fetch(${JSON.stringify(cfg.optinAppsScriptUrl)}, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ email: email, source: ${JSON.stringify(cfg.product || '')} })
+      })
+      .then(function(){ window.location.hash = 'sales'; })
+      .catch(function(){ window.location.hash = 'sales'; });
+    });
+    <\/script>`
+    : null;
+
   const optinSection = cfg.optinOn ? `
 <div id="fc-page-optin" class="fc-page" data-display="flex" style="display:none;min-height:100vh;background:${c.gradient || c.bg};${c.gradient ? "background-attachment:fixed;" : ""}color:${c.txt};display:flex;align-items:center;justify-content:center;padding:24px;">
   <div style="max-width:520px;width:100%;text-align:center;">
     <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${c.sec};margin-bottom:14px;">Free — ${cfg.optinMagnet}</div>
     <h1 style="font-size:clamp(28px,5vw,42px);line-height:1.15;margin-bottom:16px;">${cfg.optinHeadline}</h1>
     <p style="color:${c.txt};opacity:.75;margin-bottom:28px;">Enter your email below and get instant access.</p>
-    ${cfg.optinEmbed ? cfg.optinEmbed : `
+    ${optinSafeForm ? optinSafeForm : `
     <form onsubmit="event.preventDefault();window.location.hash='sales';" style="display:flex;flex-direction:column;gap:12px;">
       <input required type="email" placeholder="Your best email" style="padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:${c.txt};font-size:15px;">
       <button type="submit" style="padding:15px 20px;border-radius:8px;border:none;background:${c.acc};color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Send Me the ${cfg.optinMagnet} →</button>
@@ -3789,6 +3836,11 @@ async function generate() {
   const optinHeadline = document.getElementById('f-optin-headline').value.trim() || `Get instant access to the ${optinMagnet}`;
   let optinEmbed = document.getElementById('f-optin-embed').value.trim();
   if (optinEmbed) optinEmbed = optinEmbed.split('__FC_SOURCE__').join(product.replace(/'/g, "\\'"));
+  // Extract just the Apps Script URL from whatever the user pasted/edited — we rebuild the
+  // fetch() call ourselves (safely quoted) rather than trusting their raw hand-edited JS,
+  // since a single missing quote in a manually-edited URL can silently break the entire page's script.
+  const optinAppsScriptMatch = optinEmbed.match(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec/);
+  const optinAppsScriptUrl = optinAppsScriptMatch ? optinAppsScriptMatch[0] : '';
   const upsellOn = document.getElementById('f-upsell-on').checked;
   const upsellName = document.getElementById('f-upsell-name').value.trim() || 'Special Add-On';
   const upsellPrice = document.getElementById('f-upsell-price').value.trim() || '47';
@@ -3976,11 +4028,14 @@ fcUpdateCalc();
     ? { tag:'⚡ Special One-Time Offer', yes:`YES! Add "${bumpName}" too`, sub:`Just ${bumpPrice} — this is a one-time offer.` }
     : { tag:'⚡ Special One-Time Offer', yes:`OO! Idagdag din ang "${bumpName}"`, sub:`Para lang sa ${bumpPrice} — isang beses na alok ito.` };
 
-  // Compute live total (base price + bump price), preserving the base price's currency symbol/prefix
+  // Compute live total (base price + bump price), preserving the base price's currency symbol/prefix.
+  // If the seller specified a special bundle price (e.g. two products for a flat combined
+  // price instead of the sum of each), use that instead of simple addition.
+  const bumpTotalOverride = document.getElementById('bump-total-override').value.trim();
   const basePriceParsed = fcParsePriceGen(price);
   const bumpPriceParsed = fcParsePriceGen(bumpPrice);
   const totalWithBump = basePriceParsed.num + bumpPriceParsed.num;
-  const totalDisplay = `${basePriceParsed.prefix}${totalWithBump.toLocaleString()}`;
+  const totalDisplay = bumpTotalOverride || `${basePriceParsed.prefix}${totalWithBump.toLocaleString()}`;
 
   const bumpHTML = bumpName
     ? `<div style="border:2px solid ${colors.sec};border-radius:12px;padding:20px 24px;margin:24px 0;background:rgba(255,255,255,0.03);">
@@ -3992,7 +4047,15 @@ fcUpdateCalc();
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);font-size:18px;font-weight:700;color:#fff;">
           Total: <span id="fc-total-display">${price}</span>
         </div>
-      </div>`
+      </div>
+      <script>
+      function fcUpdateTotal(){
+        var cb = document.getElementById('fc-bump-checkbox');
+        var el = document.getElementById('fc-total-display');
+        if (!cb || !el) return;
+        el.textContent = cb.checked ? ${JSON.stringify(totalDisplay)} : ${JSON.stringify(price)};
+      }
+      <\/script>`
     : '';
 
   const checkoutFormHTML = checkoutFormOn
@@ -4396,7 +4459,7 @@ function fcShowPayInstructions(){
     if (optinOn || upsellOn || downsellOn || thankyouOn || aboutOn || servicesOn || faqOn || contactOn || storyOn) {
       cleaned = buildFunnelBundle(cleaned, {
         colors, font, fontLinks, btnStyle, brand, product, trackingHTML, heroB64, offer,
-        optinOn, optinMagnet, optinHeadline, optinEmbed,
+        optinOn, optinMagnet, optinHeadline, optinEmbed, optinAppsScriptUrl,
         upsellOn, upsellName, upsellPrice, upsellPayVal, upsellPayMethod,
         upsellGcash, upsellMaya, upsellAcctName, upsellProofContact, upsellInstructions,
         downsellOn, downsellName, downsellPrice, downsellPayVal,
@@ -4431,7 +4494,7 @@ function fcShowPayInstructions(){
 
 const DRAFT_KEY = 'funnelcraft_draft_v1';
 const DRAFT_FIELD_IDS = ['f-offer','f-buyer','f-problem','f-transform','f-includes','f-price','f-origprice',
-  'f-guarantee','f-brand','f-product','f-video','f-tone','f-length','pay-val','bump-name','bump-price','bump-bundle-link',
+  'f-guarantee','f-brand','f-product','f-video','f-tone','f-length','pay-val','bump-name','bump-price','bump-total-override','bump-bundle-link',
   'palette-sel','font-sel','btn-style','f-metapixel','f-ga4','f-tiktokpixel','f-legal-biz','f-legal-email',
   'c-bg','c-acc','c-sec','c-txt','f-bonuses-list','f-story-tagline','f-story-stats','f-story-testimonials',
   'f-deadline','f-og-image','f-coupon-code','f-coupon-message','f-exit-headline','f-exit-offer','f-hero-img-type',
