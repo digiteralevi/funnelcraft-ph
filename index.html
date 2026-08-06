@@ -346,6 +346,11 @@ select option{background:#1F1440;}
             <input type="text" id="f-guarantee" placeholder="30-day money back guarantee">
           </div>
           <div class="field" style="margin-top:6px;">
+            <div class="lbl">Additional Info (optional)</div>
+            <textarea id="f-additional-info" placeholder="Anything else the AI should know that doesn't fit the fields above — certifications, ingredients, unique process, media features, shipping/delivery details, founder background, etc."></textarea>
+            <p style="font-size:11px;color:var(--muted);margin-top:4px;">The AI will weave this in naturally wherever it fits best (benefits, About section, FAQ, etc.) — you don't need to say where it goes.</p>
+          </div>
+          <div class="field" style="margin-top:6px;">
             <div class="lbl">Real Offer Deadline (optional)</div>
             <input type="datetime-local" id="f-deadline">
             <p style="font-size:11px;color:var(--muted);margin-top:4px;">If set, a REAL countdown timer counts down to this exact date/time — no fake numbers. Leave blank to skip.</p>
@@ -863,7 +868,8 @@ document.getElementById('fc-optin-form').addEventListener('submit', function(e){
         </div>
         <div class="field">
           <div class="lbl">About Text</div>
-          <textarea id="f-about-text" placeholder="Tell buyers who you are and why they should trust you..."></textarea>
+          <textarea id="f-about-text" placeholder="e.g. Founded in 2020, we've helped 5,000+ customers across the Philippines. Featured in [publication]. Our formula is lab-tested and made from 100% natural ingredients sourced from local farms..."></textarea>
+          <p style="font-size:11px;color:var(--muted);margin-top:4px;">This is what the AI uses to write your "About Us" section and pull real stats from — the more specific and true, the better. Include things like: years in business, number of customers served, awards/features, certifications, or what makes your process/ingredients/team different. Leave blank and the AI will only write something generic. ⚠️ This text appears exactly as typed (no AI cleanup) — write 2-4 clean sentences yourself, don't paste raw text copied from a website (it'll include disclaimers, menu links, etc. you don't want). Capped at ~900 characters.</p>
         </div>
         <div class="field">
           <div class="lbl">About Photo (optional)</div>
@@ -939,7 +945,8 @@ document.getElementById('fc-optin-form').addEventListener('submit', function(e){
         </div>
         <div class="field">
           <div class="lbl">Key Stats (optional — format: Number | Unit | Label, one per line)</div>
-          <textarea id="f-story-stats" placeholder="21 | days | Shade-grown&#10;40 | g/hr | Stone-milled&#10;137 | x | Antioxidants&#10;1st | | Harvest"></textarea>
+          <textarea id="f-story-stats" placeholder="500 | + | Bottles sold monthly&#10;100 | % | Natural ingredients&#10;5 | years | In business&#10;4.8 | ★ | Average rating"></textarea>
+          <p style="font-size:11px;color:var(--muted);margin-top:4px;">For physical products, good stats are things like: units sold, % natural/organic, years in business, star rating, number of ingredients, shelf life, or certifications (e.g. "FDA-registered", "GMP-certified"). Use only numbers you can actually back up.</p>
         </div>
         <div class="field">
           <div class="lbl">Testimonial (optional — format: Quote | Name / Context, one per line, up to 3)</div>
@@ -3773,7 +3780,8 @@ async function generate() {
   const includes = document.getElementById('f-includes').value.trim();
   const price = document.getElementById('f-price').value.trim()||'97';
   const origPrice = document.getElementById('f-origprice').value.trim()||'297';
-  const guarantee = document.getElementById('f-guarantee').value.trim()||'30-day money back guarantee';
+  const guarantee = document.getElementById('f-guarantee').value.trim();
+  const additionalInfo = document.getElementById('f-additional-info').value.trim();
   const deadline = document.getElementById('f-deadline').value.trim();
   const brand = document.getElementById('f-brand').value.trim()||'Digitera Levi';
   const product = document.getElementById('f-product').value.trim()||'FunnelCraft';
@@ -3860,7 +3868,21 @@ async function generate() {
   const thankyouLink = document.getElementById('f-thankyou-link').value.trim();
 
   const aboutOn = document.getElementById('f-about-on').checked;
-  const aboutText = document.getElementById('f-about-text').value.trim() || 'We\'re passionate about helping our customers succeed.';
+  let aboutText = document.getElementById('f-about-text').value.trim();
+  // Defensive cleanup: if someone pastes a huge raw block of scraped website text
+  // (mixed-in disclaimers, blog post titles, nav links, etc.), this field displays
+  // VERBATIM with no AI cleanup — so we cap the length and collapse odd whitespace
+  // to reduce the chance of a wall of unrelated text landing on the page unedited.
+  if (aboutText) {
+    aboutText = aboutText.replace(/\s+/g, ' ').trim();
+    if (aboutText.length > 900) {
+      const cut = aboutText.slice(0, 900);
+      const lastPeriod = cut.lastIndexOf('. ');
+      aboutText = (lastPeriod > 400 ? cut.slice(0, lastPeriod + 1) : cut) + ' …';
+    }
+  } else {
+    aboutText = 'We\'re passionate about helping our customers succeed.';
+  }
   const servicesOn = document.getElementById('f-services-on').checked;
   const servicesList = document.getElementById('f-services-list').value.trim();
   const faqOn = document.getElementById('f-faq-on').checked;
@@ -4003,7 +4025,7 @@ async function generate() {
 
   // Universal "Potential Revenue" calculator — works for any niche since it just multiplies the real price by a sales slider
   const calcPriceParsed = fcParsePriceGen(price);
-  const calcHTML = calcPriceParsed.num > 0 ? `
+  const calcHTML = (calcPriceParsed.num > 0 && bizCategory === 'digital-product') ? `
 <div style="max-width:520px;margin:40px auto;padding:2px;border-radius:20px;background:linear-gradient(135deg, ${colors.acc}, ${colors.sec}, transparent 70%);">
 <div style="padding:32px 28px;border-radius:18px;background:rgba(10,10,20,0.92);text-align:center;position:relative;overflow:hidden;">
   <div style="position:absolute;top:-40%;right:-20%;width:60%;height:80%;background:radial-gradient(circle, ${colors.acc} 0%, transparent 70%);opacity:.18;pointer-events:none;"></div>
@@ -4211,23 +4233,23 @@ PAGE SECTIONS (write ALL — ${lengthConfig.sectionDepth}):
 4. "This is for you if..." - 5 buyer bullets. For any icon or visual accent on these cards, use an emoji (e.g. 🎯 ✨ 💡) or a simple CSS shape — NEVER use an img tag with an invented file path (e.g. "icon1.svg") since that file doesn't exist and will show as a broken image icon. Only use an img tag for the specific placeholder tokens provided elsewhere in this brief (like __HERO_IMG__, __GALLERY_IMG_n__) — never invent your own image sources anywhere in the page.
 5. Pain points - "Does this sound familiar?" - 5-6 bullets
 6. Solution bridge - 2-3 short paragraphs
-7. What's Included - present each item as a card (follow the LAYOUT RULE FOR CARD GRIDS above), NOT a plain bullet or numbered list. Each card: a small circular number or icon badge at the top, a bold 3-6 word title, and one short benefit sentence underneath (rewrite/expand the raw item into a benefit, don't just repeat it verbatim). If a GALLERY block is provided below, insert it directly after this card grid with a short heading like "See What's Inside".
+7. What's Included - present each item as a card (follow the LAYOUT RULE FOR CARD GRIDS above), NOT a plain bullet or numbered list. Each card: a small circular number or icon badge at the top, a bold 3-6 word title, and one short benefit sentence underneath (rewrite/expand the raw item into a benefit, don't just repeat it verbatim). If there are 7 or more items, use a smaller card width (flex:0 1 220-260px instead of 300px) so 3-4 cards fit per row on desktop — this keeps the section compact instead of stacking into a long, tall column. If a GALLERY block is provided below, insert it directly after this card grid with a short heading like "See What's Inside".
 8. Transformation - before/after, brief
 9. Testimonials — write 6 short testimonials with realistic, varied names and roles/contexts fitting the target market (avoid repeating similar phrasing or the same angle twice — vary what each one praises: price/value, speed, quality, support, ease of use, results), and make them auto-rotate continuously using this EXACT CSS-only infinite marquee pattern (do NOT use JavaScript, do NOT use scroll-snap, do NOT make it draggable — copy this structure exactly, only replacing the card content):
 <div style="overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);">
-  <div style="display:flex;gap:20px;width:max-content;animation:fcTestiMarquee 40s linear infinite;">
+  <div style="display:flex;align-items:flex-start;gap:20px;width:max-content;animation:fcTestiMarquee 40s linear infinite;">
     <!-- render the 6 testimonial cards here, then IMMEDIATELY repeat the exact same 6 cards a second time (12 cards total) so the loop is seamless -->
   </div>
 </div>
 <style>@keyframes fcTestiMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}</style>
-Each testimonial card should have a fixed width (e.g. 280-320px, flex-shrink:0) so the row scrolls smoothly. With 12 cards total, increase the animation duration to roughly 40-46s (vs the old 3-testimonial version) so the scroll speed per card stays comfortable to read, not rushed.
+Each testimonial card MUST have a fixed width (e.g. 280-320px, flex-shrink:0) AND a fixed or max-height (e.g. max-height:220px, with the quote text limited to roughly 2-3 sentences) so cards stay compact — never let a card stretch to fill the section's full height, which leaves large empty vertical space beneath the text. With 12 cards total, increase the animation duration to roughly 40-46s (vs the old 3-testimonial version) so the scroll speed per card stays comfortable to read, not rushed.
 10. Proof/Samples Section — if a PROOF/SAMPLES SECTION block is provided below, insert it here exactly as given (do not rewrite, restyle, or omit any part of it). Add a short section heading above it like "See It In Action" or "Real Results" if it fits the offer.
 11. How it works - 3 steps
 12. Potential Revenue Calculator — if a POTENTIAL REVENUE CALCULATOR block is provided below, insert it here exactly as given (do not rewrite it), with a short heading like "See Your Potential" above it.
 13. Price stack - crossed out original, highlighted final. IMPORTANT: place this exact HTML comment on its own line immediately BEFORE the price stack section, even if no bonuses were provided: <!-- BONUS_STACK --> — FunnelCraft automatically fills this with a free-bonuses value-stack section when bonuses are provided, or removes it cleanly when there are none. Do not write your own bonus section — only place the marker comment. Immediately AFTER the price (before the main CTA button), place this exact marker on its own line: <!-- COUPON_FIELD --> — FunnelCraft fills this automatically. Give the main/primary CTA button the exact id="fc-cta-main" (in addition to any onclick/href it already needs). Immediately below the main CTA button, place this exact marker on its own line: <!-- TRUST_BADGES -->.
 14. Order bump if provided
-15. Guarantee section - brief
-16. FAQ accordion - 5 questions, short answers. CRITICAL: only answer using facts actually provided in this brief (offer, price, guarantee, delivery method). NEVER invent claims about hosting services, "integrated cloud systems," technical infrastructure, or any other capability not explicitly described above — if you don't have a real answer to a question, write a different, safer question instead.
+15. Guarantee section — ONLY include this section if real guarantee/refund text was provided in the GUARANTEE field below. If that field is empty or missing, DO NOT write a guarantee section at all, and DO NOT invent one (no "30-day money-back guarantee," no made-up refund policy, nothing) — skip straight to the next section. Never claim a warranty, refund policy, or guarantee that wasn't explicitly given in this brief.
+16. FAQ accordion - 5 questions, short answers. CRITICAL: only answer using facts actually provided in this brief (offer, price, guarantee, delivery method). NEVER invent claims about hosting services, "integrated cloud systems," technical infrastructure, or any other capability not explicitly described above — if you don't have a real answer to a question, write a different, safer question instead. If no guarantee/refund text was provided, do NOT include a "Is there a guarantee?" or "Can I get a refund?" question at all — pick a different, honestly-answerable question instead.
 17. "Before You Go" closing section — write 2-4 short sentences using genuine loss-aversion framing (what they lose by NOT acting), grounded ONLY in the real offer/transformation described in this brief. Must feel like honest, warm advice from a real person — NOT hypey or salesy. Do not invent new claims, numbers, or bonuses not already mentioned elsewhere in this brief. End with a soft, direct nudge into the final CTA below.
 18. Final CTA
 19. Footer — brand name, copyright line, tagline. Do NOT add your own "Privacy Policy", "Terms", or "Disclaimer" links here — a working legal footer with those exact links is already injected automatically after your content, so adding your own (non-functional, placeholder href="#") versions would create confusing duplicates.
@@ -4248,6 +4270,7 @@ WHAT IS INCLUDED: ${includes}
 SELLING PRICE: ${price}
 ORIGINAL PRICE: ${origPrice}
 GUARANTEE: ${guarantee}
+ADDITIONAL INFO FROM THE SELLER (weave this in naturally wherever it fits best across the page — benefits, About section, FAQ, etc. — you decide where; do not force it all into one place, and do not invent anything beyond what's stated here): ${additionalInfo || 'none provided'}
 COPYWRITING TONE: ${toneMap[tone]||toneMap['english-modern']}
 
 Write every section with real, emotionally persuasive copy, matching the tone and language above.`;
@@ -4520,7 +4543,7 @@ function fcShowPayInstructions(){
 
 const DRAFT_KEY = 'funnelcraft_draft_v1';
 const DRAFT_FIELD_IDS = ['f-offer','f-buyer','f-problem','f-transform','f-includes','f-price','f-origprice',
-  'f-guarantee','f-brand','f-product','f-video','f-tone','f-length','pay-val','bump-name','bump-price','bump-total-override','bump-bundle-link',
+  'f-guarantee','f-additional-info','f-brand','f-product','f-video','f-tone','f-length','pay-val','bump-name','bump-price','bump-total-override','bump-bundle-link',
   'palette-sel','font-sel','btn-style','f-metapixel','f-ga4','f-tiktokpixel','f-legal-biz','f-legal-email',
   'c-bg','c-acc','c-sec','c-txt','f-bonuses-list','f-story-tagline','f-story-stats','f-story-testimonials',
   'f-deadline','f-og-image','f-coupon-code','f-coupon-message','f-exit-headline','f-exit-offer','f-hero-img-type',
