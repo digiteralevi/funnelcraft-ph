@@ -4877,7 +4877,17 @@ async function fcSaveNewProject() {
   const nameInput = document.getElementById('fc-project-name-input');
   const name = nameInput.value.trim();
   if (!name) { alert('Please name this project first.'); return; }
-  const projects = await fcGetProjects();
+
+  // Pull the freshest possible view before saving: merge local with whatever's
+  // currently on the cloud. Without this, a browser with a stale local copy
+  // (hasn't opened "My Projects" recently) would silently overwrite the cloud
+  // with its outdated list, discarding anything other devices added since —
+  // exactly the "lost update" bug that caused different browsers to show
+  // different subsets of the same account's projects.
+  const local = await fcGetProjects();
+  const cloud = await fcCloudLoadProjects();
+  const projects = cloud ? fcMergeProjectLists(local, cloud) : local;
+
   projects.unshift({
     id: 'proj_' + Date.now(),
     name,
@@ -4904,11 +4914,15 @@ async function fcLoadProject(id) {
 }
 
 async function fcDeleteProject(id) {
-  const projects = await fcGetProjects();
-  const proj = projects.find(p => p.id === id);
+  const local = await fcGetProjects();
+  const proj = local.find(p => p.id === id) || null;
   if (!proj) return;
   if (!confirm(`Delete "${proj.name}"? This can't be undone.`)) return;
-  await fcSetProjects(projects.filter(p => p.id !== id));
+  // Merge with fresh cloud data first so deleting one project doesn't silently
+  // discard other projects that only exist on the cloud (e.g. saved from another device).
+  const cloud = await fcCloudLoadProjects();
+  const merged = cloud ? fcMergeProjectLists(local, cloud) : local;
+  await fcSetProjects(merged.filter(p => p.id !== id));
   await fcRenderProjectsList();
 }
 
