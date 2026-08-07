@@ -2039,21 +2039,6 @@ Friendly, reassuring, professional tone — reduce anxiety around booking/visiti
 </div>
 Confident, aspirational real-estate copy — sell the lifestyle, not just the square footage. Make up plausible price/spec details that fit the offer described.`
   },
-  'table-reserve': {
-    name: 'Table Reserve',
-    palette: 'dark-cocoa', font: 'lora-inter', btnStyle: 'solid',
-    desc: 'Full-bleed food photo with a floating rating/hours pill. Built for restaurants and cafes.',
-    keywords: ['restaurant','cafe','coffee shop','bistro','diner','eatery','food business','catering','bar and grill','food truck'],
-    heroImgStyle: 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;',
-    structuralHint: `TEMPLATE — TABLE RESERVE: Build the Hero as a full-bleed food/interior photo with a dark bottom gradient and a floating rating or hours pill above the headline, using this EXACT container structure:
-<div style="position:relative;min-height:520px;display:flex;align-items:flex-end;overflow:hidden;">
-  [HERO IMAGE block goes here — already positioned absolute, inject as-is]
-  <div style="position:relative;z-index:2;padding:44px 40px 52px;max-width:600px;background:linear-gradient(to top, rgba(10,8,6,0.92) 15%, transparent 60%);">
-    [eyebrow, headline, then a small pill: <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:9px 16px;font-size:13px;font-weight:700;">[e.g. "★ 4.8 Rating" or cuisine type + "Open Daily"]</div>, then subheadline, then CTA — use light/warm-cream text since it sits over a photo]
-  </div>
-</div>
-Warm, appetizing, inviting tone — make the reader crave the experience, not just the food. If the offer includes specific dishes or a menu, weave a couple of specific, mouth-watering details into the copy rather than generic claims.`
-  },
   'counsel-dark': {
     name: 'Counsel Dark',
     palette: 'ink-navy', font: 'luxury-editorial', btnStyle: 'outline',
@@ -4892,7 +4877,17 @@ async function fcSaveNewProject() {
   const nameInput = document.getElementById('fc-project-name-input');
   const name = nameInput.value.trim();
   if (!name) { alert('Please name this project first.'); return; }
-  const projects = await fcGetProjects();
+
+  // Pull the freshest possible view before saving: merge local with whatever's
+  // currently on the cloud. Without this, a browser with a stale local copy
+  // (hasn't opened "My Projects" recently) would silently overwrite the cloud
+  // with its outdated list, discarding anything other devices added since —
+  // exactly the "lost update" bug that caused different browsers to show
+  // different subsets of the same account's projects.
+  const local = await fcGetProjects();
+  const cloud = await fcCloudLoadProjects();
+  const projects = cloud ? fcMergeProjectLists(local, cloud) : local;
+
   projects.unshift({
     id: 'proj_' + Date.now(),
     name,
@@ -4919,11 +4914,15 @@ async function fcLoadProject(id) {
 }
 
 async function fcDeleteProject(id) {
-  const projects = await fcGetProjects();
-  const proj = projects.find(p => p.id === id);
+  const local = await fcGetProjects();
+  const proj = local.find(p => p.id === id) || null;
   if (!proj) return;
   if (!confirm(`Delete "${proj.name}"? This can't be undone.`)) return;
-  await fcSetProjects(projects.filter(p => p.id !== id));
+  // Merge with fresh cloud data first so deleting one project doesn't silently
+  // discard other projects that only exist on the cloud (e.g. saved from another device).
+  const cloud = await fcCloudLoadProjects();
+  const merged = cloud ? fcMergeProjectLists(local, cloud) : local;
+  await fcSetProjects(merged.filter(p => p.id !== id));
   await fcRenderProjectsList();
 }
 
